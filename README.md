@@ -1,0 +1,2 @@
+# simulador-automatas
+Simulador de autómatas AFN y AFD con soporte para expresiones regulares. Proyecto final del curso Autómatas y Lenguajes Formales – UMG 2026. Incluye simulación de cadenas, conversión, minimización y validación mediante regex.
