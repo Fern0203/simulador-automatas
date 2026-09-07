@@ -10,5 +10,5 @@ Simulador de autómatas AFN y AFD con soporte para expresiones regulares. Proyec
 
 **Norberto Pedro Chún González** - [GitHub](https://github.com/pedrochun0779-tech)
 
-
+**Fernando José Batz Marroquín** - [GitHub](https://github.com/Fern0203)
 
