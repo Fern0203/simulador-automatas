@@ -6,7 +6,7 @@ Simulador de autómatas AFN y AFD con soporte para expresiones regulares. Proyec
 
 **Darwin Danilo Castro Garcia** - [GitHub](https://github.com/Darwin-code000)
 
-**Froilan Aldair Ardeano Miranda** - [GitHub](https://github.com/ardenomiranda100597-lgtm)
+**Froilan Aldair Ardeano Miranda** - [GitHub](https://github.com/ardeanomiranda100597-lgtm)
 
 **Norberto Pedro Chún González** - [GitHub](https://github.com/pedrochun0779-tech)
 
