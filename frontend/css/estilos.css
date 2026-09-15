@@ -1,0 +1,13 @@
+/* Transición para abrir y cerrar el menú lateral */
+#drawer {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Clases para ocultar y mostrar vistas en la SPA */
+.vista-oculta {
+    display: none !important;
+}
+
+.vista-activa {
+    display: block !important;
+}
