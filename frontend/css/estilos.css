@@ -337,3 +337,248 @@
 .enlace_espera {
     color: #f59e0b;
 }
+
+/* Barra para titulo y conmutador AFN/AFD */
+.barra_subcabecera_crear {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 12px;
+}
+
+/* Titulo principal de la vista */
+.titulo_vista {
+    font-size: 20px;
+    color: #ffffff;
+}
+
+/* Contenedor de botones de tipo AFN/AFD */
+.caja_conmutador_tipo {
+    display: flex;
+    gap: 4px;
+    background-color: #0f172a;
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+}
+
+/* Boton de tipo seleccionado */
+.boton_tipo_activo {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Boton de tipo apagado */
+.boton_tipo_inactivo {
+    background-color: transparent;
+    color: #94a3b8;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Contenedor gris tipo tarjeta para formularios */
+.caja_formulario_automata {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Distribucion en dos columnas para campos */
+.fila_dos_columnas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* Cada grupo de etiqueta y campo */
+.campo_formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Texto de la etiqueta */
+.etiqueta_campo {
+    font-size: 12px;
+    font-weight: bold;
+    color: #cbd5e1;
+}
+
+/* Inputs de texto */
+.caja_texto_input {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+}
+
+/* Enfoque al hacer clic en un input */
+.caja_texto_input:focus {
+    border-color: #3b82f6;
+}
+
+/* Selector desplegable de estados */
+.selector_opciones {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Contenedor flexible de checkboxes para estados finales */
+.contenedor_checkboxes_finales {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px;
+    min-height: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Texto cuando no se han agregado estados */
+.texto_ayuda_vacio {
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Contenedor para alinear botones a la derecha */
+.alinear_derecha {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Boton gris de accion secundaria */
+.boton_secundario {
+    background-color: #334155;
+    color: #ffffff;
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Hover del boton secundario */
+.boton_secundario:hover {
+    background-color: #475569;
+}
+
+/* Boton azul de accion principal */
+.boton_primario {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Hover del boton primario */
+.boton_primario:hover {
+    background-color: #1d4ed8;
+}
+
+/* Cabecera de la seccion de la matriz de transiciones */
+.cabecera_tabla_matriz {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* Titulo de la tabla */
+.subtitulo_tabla {
+    font-size: 14px;
+    color: #f8fafc;
+}
+
+/* Texto de ayuda al usuario */
+.texto_ayuda_tabla {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+/* Contenedor con scroll horizontal para tablas anchas */
+.tabla_desplazable {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Estructura general de la tabla */
+.tabla_transiciones {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+/* Celdas de encabezado de la tabla */
+.tabla_transiciones th {
+    background-color: #334155;
+    color: #93c5fd;
+    padding: 8px;
+    border: 1px solid #475569;
+    text-align: center;
+}
+
+/* Celdas con campos de entrada */
+.tabla_transiciones td {
+    padding: 6px;
+    border: 1px solid #334155;
+}
+
+/* Columna que muestra el estado de origen */
+.celda_estado_origen {
+    background-color: #0f172a;
+    font-weight: bold;
+    color: #60a5fa;
+    text-align: center;
+    width: 80px;
+}
+
+/* Campo input dentro de la celda de transicion */
+.input_celda_transicion {
+    width: 100%;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 6px;
+    color: #ffffff;
+    text-align: center;
+    font-size: 12px;
+    outline: none;
+}
+
+/* Enfoque al escribir en una celda */
+.input_celda_transicion:focus {
+    border-color: #3b82f6;
+    background-color: #1e293b;
+}
