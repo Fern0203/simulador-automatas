@@ -94,4 +94,151 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    //botones para elegir tipo de automata (AFN o AFD)
+    const boton_afn = document.getElementById("boton_elegir_afn");
+    const boton_afd = document.getElementById("boton_elegir_afd");
+    const texto_ayuda_matriz = document.getElementById("texto_ayuda_matriz");
+    const caja_seccion_matriz = document.getElementById("caja_seccion_matriz");
+    const tabla_matriz = document.getElementById("tabla_matriz_transiciones");
+
+    function seleccionar_afn() {
+        tipo_automata_seleccionado = "AFN";
+        boton_afn.className = "boton_tipo_activo";
+        boton_afd.className = "boton_tipo_inactivo";
+        texto_ayuda_matriz.textContent = "En AFN separa destinos con comas (ej. q0, q1) o usa ε";
+        // Ocultamos la tabla anterior para obligar a regenerar
+        caja_seccion_matriz.classList.add("ocultar");
+        tabla_matriz.innerHTML = "";
+    }
+
+    function seleccionar_afd() {
+        tipo_automata_seleccionado = "AFD";
+        boton_afd.className = "boton_tipo_activo";
+        boton_afn.className = "boton_tipo_inactivo";
+        texto_ayuda_matriz.textContent = "En AFD solo se permite un único estado destino por casilla";
+        // Ocultamos la tabla anterior para obligar a regenerar
+        caja_seccion_matriz.classList.add("ocultar");
+        tabla_matriz.innerHTML = "";
+    }
+
+    boton_afn.addEventListener("click", seleccionar_afn);
+    boton_afd.addEventListener("click", seleccionar_afd);
+
+
+    // guardar referencias a los campos de estados, alfabeto, selector de estado inicial y checkboxes de estados finales
+    const campo_estados = document.getElementById("campo_estados");
+    const campo_alfabeto = document.getElementById("campo_alfabeto");
+    const selector_inicial = document.getElementById("selector_estado_inicial");
+    const caja_finales = document.getElementById("caja_estados_finales");
+
+    // Funcion auxiliar para separar por comas y quitar espacios
+    function limpiar_lista(texto) {
+        if (!texto) return [];
+        return texto.split(",")
+            .map((item) => item.trim())
+            .filter((item) => item.length > 0);
+    }
+
+    function actualizar_opciones_estados() {
+        const lista_estados = limpiar_lista(campo_estados.value);
+
+        // 1. Limpiar y llenar el selector desplegable (q0)
+        selector_inicial.innerHTML = "";
+        if (lista_estados.length === 0) {
+            selector_inicial.innerHTML = '<option value="">-- Ingresa primero los estados --</option>';
+        } else {
+            lista_estados.forEach((estado) => {
+                const opcion = document.createElement("option");
+                opcion.value = estado;
+                opcion.textContent = estado;
+                selector_inicial.appendChild(opcion);
+            });
+        }
+
+        // 2. Limpiar y llenar los checkboxes para estados de aceptacion (F)
+        caja_finales.innerHTML = "";
+        if (lista_estados.length === 0) {
+            caja_finales.innerHTML = '<span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>';
+        } else {
+            lista_estados.forEach((estado) => {
+                const etiqueta = document.createElement("label");
+                etiqueta.style.display = "flex";
+                etiqueta.style.alignItems = "center";
+                etiqueta.style.gap = "4px";
+                etiqueta.style.backgroundColor = "#1e293b";
+                etiqueta.style.padding = "4px 8px";
+                etiqueta.style.borderRadius = "4px";
+                etiqueta.style.cursor = "pointer";
+
+                etiqueta.innerHTML = `
+                    <input type="checkbox" value="${estado}" class="casilla_estado_final">
+                    <span>${estado}</span>
+                `;
+                caja_finales.appendChild(etiqueta);
+            });
+        }
+    }
+
+    // Cuando el usuario termina de escribir en el campo estados (sale del input)
+    campo_estados.addEventListener("blur", actualizar_opciones_estados);
+
+
+    // generar la tabla de transiciones
+    const boton_generar_tabla = document.getElementById("boton_generar_tabla");
+
+    boton_generar_tabla.addEventListener("click", () => {
+        const estados = limpiar_lista(campo_estados.value);
+        const alfabeto = limpiar_lista(campo_alfabeto.value);
+
+        // Validamos que no esten vacios
+        if (estados.length === 0 || alfabeto.length === 0) {
+            alert("Por favor ingresa al menos un estado y un símbolo para el alfabeto.");
+            return;
+        }
+
+        // Aseguramos que los selectores y checkboxes esten sincronizados
+        actualizar_opciones_estados();
+
+        // Si es AFN agregamos la columna epsilon ε
+        const columnas = [...alfabeto];
+        if (tipo_automata_seleccionado === "AFN") {
+            columnas.push("ε");
+        }
+
+        // Armamos la cabecera de la tabla
+        let contenido_html = "<thead><tr>";
+        contenido_html += '<th class="celda_estado_origen">Estado</th>';
+        columnas.forEach((columna) => {
+            contenido_html += `<th>${columna}</th>`;
+        });
+        contenido_html += "</tr></thead><tbody>";
+
+        // Armamos cada fila por cada estado
+        estados.forEach((estado) => {
+            contenido_html += "<tr>";
+            contenido_html += `<td class="celda_estado_origen">${estado}</td>`;
+
+            columnas.forEach((columna) => {
+                const placeholder = tipo_automata_seleccionado === "AFN" ? "ej. q0, q1" : "ej. q1";
+                contenido_html += `
+                    <td>
+                        <input type="text" 
+                               data-origen="${estado}" 
+                               data-simbolo="${columna}" 
+                               placeholder="${placeholder}" 
+                               class="input_celda_transicion celda_matriz_input">
+                    </td>
+                `;
+            });
+
+            contenido_html += "</tr>";
+        });
+
+        contenido_html += "</tbody>";
+
+        // Pintamos la tabla y la mostramos
+        tabla_matriz.innerHTML = contenido_html;
+        caja_seccion_matriz.classList.remove("ocultar");
+    });
+
 });
