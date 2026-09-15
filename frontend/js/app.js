@@ -398,4 +398,86 @@ document.addEventListener("DOMContentLoaded", () => {
         contenedor_pasos.innerHTML = lista_pasos_html;
         modal_pasos.classList.remove("ocultar");
     };
+
+    // simulacion de cadenas con el automata guardado
+    const campo_cadena = document.getElementById("campo_cadena_simular");
+    const boton_simular = document.getElementById("boton_simular_cadena");
+    const caja_resultado_simulacion = document.getElementById("caja_resultado_simulacion");
+
+    boton_simular.addEventListener("click", async () => {
+        // 1. Validar que exista un automata guardado
+        if (!automata_guardado) {
+            alert("Primero debes crear y guardar un autómata.");
+            return;
+        }
+
+        const cadena_ingresada = campo_cadena.value.trim();
+
+        // 2. Validar que los caracteres de la cadena pertenezcan al alfabeto (si no es cadena vacia)
+        if (cadena_ingresada.length > 0) {
+            const simbolos_cadena = cadena_ingresada.split("");
+            for (let simbolo of simbolos_cadena) {
+                if (!automata_guardado.alfabeto.includes(simbolo)) {
+                    alert(`Error: El símbolo '${simbolo}' no forma parte del alfabeto [${automata_guardado.alfabeto.join(", ")}].`);
+                    campo_cadena.focus();
+                    return;
+                }
+            }
+        }
+
+        // 3. Indicador visual de espera
+        caja_resultado_simulacion.className = "caja_mensaje_resultado";
+        caja_resultado_simulacion.style.backgroundColor = "#1e293b";
+        caja_resultado_simulacion.style.color = "#93c5fd";
+        caja_resultado_simulacion.textContent = "⏳ Enviando cadena al servidor...";
+        caja_resultado_simulacion.classList.remove("ocultar");
+
+        // 4. Peticion al Backend (FastAPI en el puerto 8000)
+        try {
+            const respuesta = await fetch("http://127.0.0.1:8000/api/simular", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    automata: automata_guardado,
+                    cadena: cadena_ingresada
+                })
+            });
+
+            if (!respuesta.ok) {
+                const error_servidor = await respuesta.json();
+                throw new Error(error_servidor.detail?.mensaje || "Error al procesar la simulación.");
+            }
+
+            const resultado = await respuesta.json();
+
+            // 5. Mostrar veredicto final en la pantalla
+            if (resultado.aceptada) {
+                caja_resultado_simulacion.className = "caja_mensaje_resultado resultado_aceptado";
+                caja_resultado_simulacion.innerHTML = `
+                    <p>✅ <strong>Cadena Aceptada</strong></p>
+                    <p style="font-size: 11px; margin-top: 4px;">${resultado.mensaje}</p>
+                `;
+            } else {
+                caja_resultado_simulacion.className = "caja_mensaje_resultado resultado_rechazado";
+                caja_resultado_simulacion.innerHTML = `
+                    <p>❌ <strong>Cadena Rechazada</strong></p>
+                    <p style="font-size: 11px; margin-top: 4px;">${resultado.mensaje}</p>
+                `;
+            }
+
+            // Si el Companero 4 ya creo la funcion de animar el grafo, la ejecutamos
+            if (window.animar_recorrido_grafo) {
+                window.animar_recorrido_grafo(resultado.pasos);
+            }
+
+        } catch (error) {
+            caja_resultado_simulacion.className = "caja_mensaje_resultado resultado_rechazado";
+            caja_resultado_simulacion.innerHTML = `
+                <p>⚠️ <strong>Error de Conexión</strong></p>
+                <p style="font-size: 11px; margin-top: 4px;">Asegúrate de que el servidor Uvicorn esté encendido en el puerto 8000.</p>
+            `;
+        }
+    });
 });
