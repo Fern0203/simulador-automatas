@@ -1,0 +1,867 @@
+
+
+/*estilos generales para toda la página*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+.cuerpo_pagina {
+    background-color: #0f172a; 
+    color: #ffffff;             
+    min-height: 100vh;
+}
+
+/* estilo para la barra superior */
+.barra_superior {
+    background-color: #1e293b;  
+    border-bottom: 1px solid #334155; 
+    padding: 12px 20px;
+    display: flex;           
+    justify-content: space-between;
+    align-items: center;       
+    position: sticky;           
+    top: 0;
+    z-index: 100;
+}
+
+/* estilo para la caja del logo y el título */
+.caja_logo_y_titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre cada elemento */
+}
+
+/* menu*/
+.boton_menu_icono {
+    background-color: #334155;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    font-size: 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+
+/* Cambios de color al pasar el ratón sobre el botón de menú */
+.boton_menu_icono:hover {
+    background-color: #475569; 
+}
+
+/* Etiqueta azul de la UMG */
+.insignia_universidad {
+    background-color: #2563eb; /* Azul UMG */
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Texto del titulo */
+.texto_titulo_proyecto {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Botón de integrantes a la derecha */
+.boton_integrantes {
+    background-color: #334155;
+    color: #cbd5e1;
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+
+/* Cambios de color al pasar el ratón sobre el botón de integrantes */
+.boton_integrantes:hover {
+    background-color: #2563eb; 
+    color: #ffffff;
+}
+
+
+/* Utilidad general para ocultar elementos */
+.ocultar {
+    display: none !important;
+}
+
+/* Fondo oscuro que cubre la pantalla al abrir el menu */
+.fondo_oscuro_menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 150;
+}
+
+/* Caja principal del menu lateral */
+.menu_lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background-color: #1e293b;
+    border-right: 1px solid #334155;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+/* Posicion cuando el menu esta cerrado (fuera de pantalla) */
+.menu_cerrado {
+    transform: translateX(-100%);
+}
+
+/* Posicion cuando el menu esta abierto */
+.menu_abierto {
+    transform: translateX(0);
+}
+
+/* Barra superior dentro del menu lateral */
+.cabecera_menu {
+    padding: 14px 16px;
+    border-bottom: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Titulo dentro del menu lateral */
+.texto_menu_titulo {
+    font-weight: bold;
+    font-size: 15px;
+    color: #f8fafc;
+}
+
+/* Boton con la X para cerrar */
+.boton_cerrar {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Cambio de color del boton cerrar al pasar el cursor */
+.boton_cerrar:hover {
+    color: #ffffff;
+}
+
+/* Contenedor vertical de los botones de seccion */
+.caja_enlaces_menu {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+/* Estilo para los botones individuales de navegacion */
+.boton_seccion {
+    background-color: transparent;
+    border: none;
+    color: #cbd5e1;
+    padding: 10px 12px;
+    text-align: left;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Efecto hover sobre los botones de seccion */
+.boton_seccion:hover {
+    background-color: #334155;
+    color: #ffffff;
+}
+
+/* Texto separador entre grupos de opciones */
+.separador_menu {
+    font-size: 11px;
+    font-weight: bold;
+    color: #64748b;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    padding-left: 8px;
+    text-transform: uppercase;
+}
+
+/* Pie en la parte inferior del menu lateral */
+.pie_menu {
+    padding: 12px;
+    border-top: 1px solid #334155;
+    text-align: center;
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* Contenedor principal centrado con margen */
+.caja_contenido_principal {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    width: 100%;
+}
+
+/* Estructura base para cada pantalla */
+.seccion_vista {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Caja del banner de presentacion */
+.caja_banner_inicio {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    padding: 24px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Etiqueta de la fase de evaluacion */
+.insignia_fase {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+/* Titulo del banner */
+.titulo_banner {
+    font-size: 22px;
+    color: #ffffff;
+}
+
+/* Descripcion debajo del titulo */
+.descripcion_banner {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+/* Cuadricula adaptable para las tarjetas */
+.caja_tarjetas_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Caja de cada tarjeta individual */
+.tarjeta_inicio {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+/* Animacion al pasar el mouse sobre la tarjeta */
+.tarjeta_inicio:hover {
+    transform: translateY(-3px);
+    border-color: #3b82f6;
+}
+
+/* Tamaño de los iconos de cada tarjeta */
+.icono_tarjeta {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+/* Titulo de cada tarjeta */
+.titulo_tarjeta {
+    font-size: 16px;
+    color: #ffffff;
+}
+
+/* Texto explicativo dentro de la tarjeta */
+.texto_tarjeta {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.4;
+    flex: 1;
+}
+
+/* Texto del enlace inferior */
+.enlace_tarjeta {
+    font-size: 12px;
+    font-weight: bold;
+    color: #60a5fa;
+    margin-top: 8px;
+}
+
+/* Ajuste visual para la tarjeta de regex para proximanete agregarlo */
+.tarjeta_en_espera {
+    border-color: rgba(245, 158, 11, 0.4);
+    background-color: rgba(30, 41, 59, 0.7);
+}
+
+/* Fila para alinear titulo modulo proximamente */
+.cabecera_tarjeta_espera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Insignia amarilla proximanete */
+.insignia_proxima {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Enlace de color amarillo para el modulo en espera */
+.enlace_espera {
+    color: #f59e0b;
+}
+
+/* Barra para titulo y conmutador AFN/AFD */
+.barra_subcabecera_crear {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 12px;
+}
+
+/* Titulo principal de la vista */
+.titulo_vista {
+    font-size: 20px;
+    color: #ffffff;
+}
+
+/* Contenedor de botones de tipo AFN/AFD */
+.caja_conmutador_tipo {
+    display: flex;
+    gap: 4px;
+    background-color: #0f172a;
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+}
+
+/* Boton de tipo seleccionado */
+.boton_tipo_activo {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Boton de tipo apagado */
+.boton_tipo_inactivo {
+    background-color: transparent;
+    color: #94a3b8;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Contenedor gris tipo tarjeta para formularios */
+.caja_formulario_automata {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Distribucion en dos columnas para campos */
+.fila_dos_columnas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* Cada grupo de etiqueta y campo */
+.campo_formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Texto de la etiqueta */
+.etiqueta_campo {
+    font-size: 12px;
+    font-weight: bold;
+    color: #cbd5e1;
+}
+
+/* Inputs de texto */
+.caja_texto_input {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+}
+
+/* Enfoque al hacer clic en un input */
+.caja_texto_input:focus {
+    border-color: #3b82f6;
+}
+
+/* Selector desplegable de estados */
+.selector_opciones {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Contenedor flexible de checkboxes para estados finales */
+.contenedor_checkboxes_finales {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px;
+    min-height: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Texto cuando no se han agregado estados */
+.texto_ayuda_vacio {
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Contenedor para alinear botones a la derecha */
+.alinear_derecha {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Boton gris de accion secundaria */
+.boton_secundario {
+    background-color: #334155;
+    color: #ffffff;
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Hover del boton secundario */
+.boton_secundario:hover {
+    background-color: #475569;
+}
+
+/* Boton azul de accion principal */
+.boton_primario {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Hover del boton primario */
+.boton_primario:hover {
+    background-color: #1d4ed8;
+}
+
+/* Cabecera de la seccion de la matriz de transiciones */
+.cabecera_tabla_matriz {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* Titulo de la tabla */
+.subtitulo_tabla {
+    font-size: 14px;
+    color: #f8fafc;
+}
+
+/* Texto de ayuda al usuario */
+.texto_ayuda_tabla {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+/* Contenedor con scroll horizontal para tablas anchas */
+.tabla_desplazable {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Estructura general de la tabla */
+.tabla_transiciones {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+/* Celdas de encabezado de la tabla */
+.tabla_transiciones th {
+    background-color: #334155;
+    color: #93c5fd;
+    padding: 8px;
+    border: 1px solid #475569;
+    text-align: center;
+}
+
+/* Celdas con campos de entrada */
+.tabla_transiciones td {
+    padding: 6px;
+    border: 1px solid #334155;
+}
+
+/* Columna que muestra el estado de origen */
+.celda_estado_origen {
+    background-color: #0f172a;
+    font-weight: bold;
+    color: #60a5fa;
+    text-align: center;
+    width: 80px;
+}
+
+/* Campo input dentro de la celda de transicion */
+.input_celda_transicion {
+    width: 100%;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 6px;
+    color: #ffffff;
+    text-align: center;
+    font-size: 12px;
+    outline: none;
+}
+
+/* Enfoque al escribir en una celda */
+.input_celda_transicion:focus {
+    border-color: #3b82f6;
+    background-color: #1e293b;
+}
+
+/* Cabecera para separar el titulo de la insignia */
+.cabecera_resultado_grafo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Etiqueta azul que confirma el tipo de automata cargado */
+.insignia_tipo_creado {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+/* Contenedor oscuro donde se montara el grafo interactivo */
+.lienzo_grafo {
+    width: 100%;
+    height: 420px;
+    background-color: #0b1329;
+    border: 2px dashed #334155;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Contenedor para la seccion de prueba de palabras */
+.caja_probar_cadena {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Fila para alinear el input y el boton de simular */
+.fila_entrada_simulacion {
+    display: flex;
+    gap: 8px;
+}
+
+/* Permite que el input ocupe el espacio disponible */
+.flex_input {
+    flex: 1;
+}
+
+/* Boton verde para iniciar la simulacion */
+.boton_exito {
+    background-color: #16a34a;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Efecto hover del boton verde */
+.boton_exito:hover {
+    background-color: #15803d;
+}
+
+/* Caja de alerta para mostrar el veredicto final */
+.caja_mensaje_resultado {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.4;
+}
+
+/* Estilo cuando la cadena es aceptada */
+.resultado_aceptado {
+    background-color: rgba(22, 163, 74, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+/* Estilo cuando la cadena es rechazada */
+.resultado_rechazado {
+    background-color: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+
+/* Barra para separar titulo de seccion y boton de cargar */
+.barra_subcabecera_accion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Boton para traer el automata guardado en memoria */
+.boton_cargar_activo {
+    background-color: #334155;
+    color: #93c5fd;
+    border: 1px solid #475569;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Hover del boton de cargar */
+.boton_cargar_activo:hover {
+    background-color: #475569;
+}
+
+/* Parrafo explicativo del algoritmo */
+.texto_explicacion_algoritmo {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+/* Boton amarillo para abrir la modal de pasos */
+.boton_pasos {
+    background-color: #d97706;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Hover del boton de pasos */
+.boton_pasos:hover {
+    background-color: #b45309;
+}
+
+
+/* Centra botones o textos */
+.alinear_centro {
+    display: flex;
+    justify-content: center;
+}
+
+/* Tarjeta centrada para la entrega 2 */
+.caja_modulo_espera {
+    background-color: #1e293b;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 12px;
+    padding: 32px 20px;
+    max-width: 500px;
+    margin: 40px auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Icono grande de advertencia */
+.icono_espera {
+    font-size: 40px;
+}
+
+/* Fondo oscuro que cubre toda la pantalla al abrir un modal */
+.caja_modal_fondo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    z-index: 300;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+/* Caja blanca/oscura que contiene el dialogo modal */
+.caja_modal_dialogo {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Version mas ancha para tablas de pasos largas */
+.caja_modal_ancho {
+    max-width: 680px;
+    max-height: 85vh;
+}
+
+/* Barra superior de cada modal */
+.cabecera_modal {
+    padding: 14px 18px;
+    border-bottom: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Titulo del modal */
+.titulo_modal {
+    font-size: 15px;
+    color: #ffffff;
+}
+
+/* Area de contenido del modal */
+.cuerpo_modal {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Area de contenido con barra de desplazamiento vertical */
+.cuerpo_modal_scroll {
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 12px;
+    color: #cbd5e1;
+}
+
+/* Fila para los datos de cada integrante */
+.tarjeta_integrante {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+/* Nombre de cada integrante */
+.nombre_integrante {
+    font-size: 13px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+/* Rol asignado */
+.rol_integrante {
+    font-size: 11px;
+    color: #60a5fa;
+    margin-top: 2px;
+}
+
+/* Pie del modal */
+.pie_modal {
+    padding: 12px 18px;
+    border-top: 1px solid #334155;
+}
+
+/* Boton que ocupa todo el ancho */
+.ancho_total {
+    width: 100%;
+}
+
+
+/* Texto de ayuda debajo del selector AFN/AFD */
+.texto_descripcion_modo {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: -12px;
+    margin-bottom: 4px;
+}

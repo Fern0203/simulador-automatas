@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Autómatas</title>
+    
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="cuerpo_pagina">
+
+   
+    <header class="barra_superior">
+        
+      
+        <div class="caja_logo_y_titulo">
+            <button id="boton_abrir_menu" class="boton_menu_icono">
+                ☰
+            </button>
+            <span class="insignia_universidad">UMG</span>
+            <span class="texto_titulo_proyecto">Simulador de Autómatas</span>
+        </div>
+
+    
+        <div class="caja_boton_integrantes">
+            <button id="boton_mostrar_integrantes" class="boton_integrantes">
+                👥 Integrantes
+            </button>
+        </div>
+
+    </header>
+    
+    <div id="fondo_oscuro" class="fondo_oscuro_menu ocultar"></div>
+
+
+    <aside id="menu_lateral" class="menu_lateral menu_cerrado">
+
+        
+        <div class="cabecera_menu">
+            <span class="texto_menu_titulo">Navegacion</span>
+            <button id="boton_cerrar_menu" class="boton_cerrar">✕</button>
+        </div>
+
+      
+        <nav class="caja_enlaces_menu">
+            <button class="boton_seccion" data-vista="vista_inicio">🏠 Inicio</button>
+
+            <div class="separador_menu">MODULO AUTÓMATAS</div>
+            <button class="boton_seccion" data-vista="vista_crear">⚙️ Crear y Simular</button>
+            <button class="boton_seccion" data-vista="vista_convertir">🔄 Conversión AFN a AFD</button>
+            <button class="boton_seccion" data-vista="vista_minimizar">📉 Minimización AFD</button>
+
+            <div class="separador_menu">MODULO EXPRESIONES REGULARES</div>
+            <button class="boton_seccion" data-vista="vista_regex">🔤 Expresiones Regulares</button>
+        </nav>
+
+       
+        <div class="pie_menu">
+            <span>© 2026 Simulador de Autómatas. Todos los derechos reservados.</span>
+        </div>
+
+    </aside>
+   
+    >
+    <main class="caja_contenido_principal">
+
+       
+        <section id="vista_inicio" class="seccion_vista">
+
+            
+            <div class="caja_banner_inicio">
+                <span class="insignia_fase">..</span>
+                <h2 class="titulo_banner">Simulador de Automatas Finitos</h2>
+                <p class="descripcion_banner">Crea, simula cadenas paso a paso, convierte de AFN a AFD y minimiza estados equivalentes.</p>
+            </div>
+
+            
+            <div class="caja_tarjetas_grid">
+
+                
+                <div class="tarjeta_inicio" data-vista="vista_crear">
+                    <div class="icono_tarjeta">⚙️</div>
+                    <h3 class="titulo_tarjeta">Crear y Simular</h3>
+                    <p class="texto_tarjeta">Define automatas AFN o AFD manualmente con matriz dinamica y prueba cadenas en vivo.</p>
+                    <span class="enlace_tarjeta">Comenzar diseño →</span>
+                </div>
+
+                
+                <div class="tarjeta_inicio tarjeta_en_espera" data-vista="vista_regex">
+                    <div class="icono_tarjeta">🔤</div>
+                    <div class="cabecera_tarjeta_espera">
+                        <h3 class="titulo_tarjeta">Expresiones Regulares</h3>
+                        <span class="insignia_proxima">En produccion</span>
+                    </div>
+                    <p class="texto_tarjeta">Conversión de expresiones regulares a automatas y validación de archivos logs.</p>
+                    <span class="enlace_tarjeta enlace_espera">En produccion →</span>
+                </div>
+
+             
+                <div id="tarjeta_abrir_integrantes" class="tarjeta_inicio">
+                    <div class="icono_tarjeta">👥</div>
+                    <h3 class="titulo_tarjeta">Equipo de Desarrollo</h3>
+                    <p class="texto_tarjeta">Consulta los nombres de los integrantes, carnés y asignación de roles del proyecto.</p>
+                    <span class="enlace_tarjeta">Ver integrantes →</span>
+                </div>
+
+            </div>
+
+        </section>
+     
+        <section id="vista_crear" class="seccion_vista ocultar">
+
+         
+            
+
+            <!-- Barra superior con titulo y selector AFN / AFD -->
+            <div class="barra_subcabecera_crear">
+                <h2 class="titulo_vista">⚙️ Constructor de Autómata</h2>
+                <div class="caja_conmutador_tipo">
+                    <button id="boton_elegir_afn" class="boton_tipo_activo">AFN</button>
+                    <button id="boton_elegir_afd" class="boton_tipo_inactivo">AFD</button>
+                </div>
+            </div>
+
+            
+            <p id="texto_descripcion_modo" class="texto_descripcion_modo">
+                Modo AFN: Permite transiciones vacías (ε) y múltiples estados destino separados por comas.
+            </p>
+            
+            <div class="caja_formulario_automata">
+
+                <div class="fila_dos_columnas">
+                   
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Estados (Q) - separados por coma:</label>
+                        <input type="text" id="campo_estados" class="caja_texto_input" placeholder="ej. q0, q1, q2">
+                    </div>
+
+                  
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Alfabeto (Σ) - símbolos por coma:</label>
+                        <input type="text" id="campo_alfabeto" class="caja_texto_input" placeholder="ej. 0, 1  o  a, b">
+                    </div>
+                </div>
+
+                <div class="fila_dos_columnas">
+                    
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Estado Inicial (q0):</label>
+                        <select id="selector_estado_inicial" class="selector_opciones">
+                            <option value="">-- Ingresa primero los estados --</option>
+                        </select>
+                    </div>
+
+                
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Estados Finales (F):</label>
+                        <div id="caja_estados_finales" class="contenedor_checkboxes_finales">
+                            <span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alinear_derecha">
+                    <button id="boton_generar_tabla" class="boton_secundario">
+                         Generar Tabla de Transiciones
+                    </button>
+                </div>
+
+            </div>
+
+            
+            <div id="caja_seccion_matriz" class="caja_formulario_automata ocultar">
+                <div class="cabecera_tabla_matriz">
+                    <h3 class="subtitulo_tabla">Tabla de Transiciones (δ)</h3>
+                    <span id="texto_ayuda_matriz" class="texto_ayuda_tabla">En AFN separa destinos con comas (ej. q0, q1) o usa ε</span>
+                </div>
+
+                <div class="tabla_desplazable">
+                    <table id="tabla_matriz_transiciones" class="tabla_transiciones"></table>
+                </div>
+
+                <div class="alinear_derecha">
+                    <button id="boton_guardar_automata" class="boton_primario">
+                        ✓ Guardar Autómata
+                    </button>
+                </div>
+            </div>
+
+           
+            <div id="caja_resultado_crear" class="caja_formulario_automata ocultar">
+
+                <div class="cabecera_resultado_grafo">
+                    <h3 class="subtitulo_tabla">Representación Gráfica</h3>
+                    <span id="insignia_estado_automata" class="insignia_tipo_creado">AFN Activo</span>
+                </div>
+
+                <div id="lienzo_grafo_crear" class="lienzo_grafo"></div>
+
+               
+                <div class="caja_probar_cadena">
+                    <label class="etiqueta_campo">Probar cadena de entrada:</label>
+                    
+                    <div class="fila_entrada_simulacion">
+                        <input type="text" id="campo_cadena_simular" class="caja_texto_input flex_input" placeholder="Ingresa la cadena a evaluar (ej. 0101)">
+                        <button id="boton_simular_cadena" class="boton_exito">▶ Simular</button>
+                    </div>
+
+                    
+                    <div id="caja_resultado_simulacion" class="caja_mensaje_resultado ocultar"></div>
+                </div>
+
+            </div>
+
+        </section>
+
+  
+        <section id="vista_convertir" class="seccion_vista ocultar">
+
+            
+            <div class="barra_subcabecera_accion">
+                <h2 class="titulo_vista">🔄 Conversión de AFN a AFD</h2>
+                <button id="boton_cargar_para_convertir" class="boton_cargar_activo">
+                    📂 Usar Autómata Creado
+                </button>
+            </div>
+
+           
+            <div class="caja_formulario_automata">
+                <p class="texto_explicacion_algoritmo">
+                    Aplica el algoritmo de construcción de subconjuntos para transformar un autómata con no determinismo o saltos vacíos (ε) en un autómata determinista equivalente.
+                </p>
+                <div class="alinear_derecha">
+                    <button id="boton_ejecutar_conversion" class="boton_primario">
+                        ⚡ Convertir a AFD
+                    </button>
+                </div>
+            </div>
+
+            
+            <div id="caja_resultado_conversion" class="caja_formulario_automata ocultar">
+                <div class="cabecera_resultado_grafo">
+                    <h3 class="subtitulo_tabla">AFD Resultante</h3>
+                    <button id="boton_ver_pasos_conversion" class="boton_pasos">
+                        📋 Ver Pasos del Algoritmo
+                    </button>
+                </div>
+                <div id="lienzo_grafo_conversion" class="lienzo_grafo"></div>
+            </div>
+
+        </section>
+
+       
+        <section id="vista_minimizar" class="seccion_vista ocultar">
+
+          
+            <div class="barra_subcabecera_accion">
+                <h2 class="titulo_vista">📉 Minimización de AFD</h2>
+                <button id="boton_cargar_para_minimizar" class="boton_cargar_activo">
+                    📂 Usar AFD Activo
+                </button>
+            </div>
+
+            
+            <div class="caja_formulario_automata">
+                <p class="texto_explicacion_algoritmo">
+                    Elimina estados inaccesibles y agrupa estados equivalentes mediante particiones sucesivas para obtener el autómata con el menor número posible de estados.
+                </p>
+                <div class="alinear_derecha">
+                    <button id="boton_ejecutar_minimizar" class="boton_primario">
+                        ⚡ Minimizar AFD
+                    </button>
+                </div>
+            </div>
+
+           
+            <div id="caja_resultado_minimizar" class="caja_formulario_automata ocultar">
+                <div class="cabecera_resultado_grafo">
+                    <h3 class="subtitulo_tabla">AFD Minimizado</h3>
+                    <button id="boton_ver_pasos_minimizar" class="boton_pasos">
+                        📋 Ver Pasos de Partición
+                    </button>
+                </div>
+                <div id="lienzo_grafo_minimizar" class="lienzo_grafo"></div>
+            </div>
+
+        </section>
+
+        <!-- VISTA DE EXPRESIONES REGULARES LUEGO SE TERMINARA -->
+        <section id="vista_regex" class="seccion_vista ocultar">
+            <div class="caja_modulo_espera">
+                <div class="icono_espera">🚧</div>
+                <h2 class="titulo_vista">Módulo en Desarrollo</h2>
+                <p class="texto_explicacion_algoritmo">
+                    El motor para procesar expresiones regulares mediante el algoritmo de Thompson y la validación de archivos de logs estará disponible LUEGO XD</strong>.
+                </p>
+                <div class="alinear_centro">
+                    <button class="boton_secundario boton_ir_inicio" data-vista="vista_inicio">
+                        ← Volver al Inicio
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+  
+    <div id="modal_integrantes" class="caja_modal_fondo ocultar">
+        <div class="caja_modal_dialogo">
+            
+            <div class="cabecera_modal">
+                <h3 class="titulo_modal">👥 Equipo de Desarrollo</h3>
+                <button id="boton_cerrar_modal_integrantes" class="boton_cerrar">✕</button>
+            </div>
+
+            <div class="cuerpo_modal">
+                <div class="tarjeta_integrante">
+                    <p class="nombre_integrante">Fernando</p>
+                    <p class="rol_integrante">Maquetado Frontend</p>
+                </div>
+                <div class="tarjeta_integrante">
+                    <p class="nombre_integrante">Darwin</p>
+                    <p class="rol_integrante">Algoritmos, codigo automatas</p>
+                </div>
+                <div class="tarjeta_integrante">
+                    <p class="nombre_integrante">Froilan</p>
+                    <p class="rol_integrante">Conversión y Minimización</p>
+                </div>
+                <div class="tarjeta_integrante">
+                    <p class="nombre_integrante">Norberto</p>
+                    <p class="rol_integrante">Grafos y consumo api</p>
+                </div>
+            </div>
+
+            <div class="pie_modal">
+                <button id="boton_cerrar_modal_integrantes_pie" class="boton_secundario ancho_total">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    
+    <div id="modal_pasos" class="caja_modal_fondo ocultar">
+        <div class="caja_modal_dialogo caja_modal_ancho">
+            
+            <div class="cabecera_modal">
+                <h3 id="titulo_modal_pasos" class="titulo_modal">📋 Pasos del Algoritmo</h3>
+                <button id="boton_cerrar_modal_pasos" class="boton_cerrar">✕</button>
+            </div>
+
+            <div id="contenedor_contenido_pasos" class="cuerpo_modal_scroll">
+               
+            </div>
+
+            <div class="pie_modal">
+                <button id="boton_cerrar_modal_pasos_pie" class="boton_secundario ancho_total">
+                    Entendido
+                </button>
+            </div>
+
+        </div>
+    </div>
+    </main>
+    
+    <script src="js/app.js"></script>
+</body>
+</html>
+</body>
+</html>
