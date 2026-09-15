@@ -674,3 +674,58 @@
     color: #fca5a5;
     border: 1px solid rgba(239, 68, 68, 0.4);
 }
+
+
+/* Barra para separar titulo de seccion y boton de cargar */
+.barra_subcabecera_accion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Boton para traer el automata guardado en memoria */
+.boton_cargar_activo {
+    background-color: #334155;
+    color: #93c5fd;
+    border: 1px solid #475569;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Hover del boton de cargar */
+.boton_cargar_activo:hover {
+    background-color: #475569;
+}
+
+/* Parrafo explicativo del algoritmo */
+.texto_explicacion_algoritmo {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+/* Boton amarillo para abrir la modal de pasos */
+.boton_pasos {
+    background-color: #d97706;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Hover del boton de pasos */
+.boton_pasos:hover {
+    background-color: #b45309;
+}
