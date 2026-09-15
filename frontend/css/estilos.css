@@ -1,13 +1,86 @@
-/* Transición para abrir y cerrar el menú lateral */
-#drawer {
-    transition: transform 0.3s ease-in-out;
+
+
+/*estilos generales para toda la página*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
 }
 
-/* Clases para ocultar y mostrar vistas en la SPA */
-.vista-oculta {
-    display: none !important;
+.cuerpo_pagina {
+    background-color: #0f172a; 
+    color: #ffffff;             
+    min-height: 100vh;
 }
 
-.vista-activa {
-    display: block !important;
+/* estilo para la barra superior */
+.barra_superior {
+    background-color: #1e293b;  
+    border-bottom: 1px solid #334155; 
+    padding: 12px 20px;
+    display: flex;           
+    justify-content: space-between;
+    align-items: center;       
+    position: sticky;           
+    top: 0;
+    z-index: 100;
+}
+
+/* estilo para la caja del logo y el título */
+.caja_logo_y_titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre cada elemento */
+}
+
+/* menu*/
+.boton_menu_icono {
+    background-color: #334155;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    font-size: 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+
+/* Cambios de color al pasar el ratón sobre el botón de menú */
+.boton_menu_icono:hover {
+    background-color: #475569; 
+}
+
+/* Etiqueta azul de la UMG */
+.insignia_universidad {
+    background-color: #2563eb; /* Azul UMG */
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Texto del titulo */
+.texto_titulo_proyecto {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Botón de integrantes a la derecha */
+.boton_integrantes {
+    background-color: #334155;
+    color: #cbd5e1;
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+
+/* Cambios de color al pasar el ratón sobre el botón de integrantes */
+.boton_integrantes:hover {
+    background-color: #2563eb; 
+    color: #ffffff;
 }
