@@ -204,3 +204,136 @@
     font-size: 11px;
     color: #64748b;
 }
+
+/* Contenedor principal centrado con margen */
+.caja_contenido_principal {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    width: 100%;
+}
+
+/* Estructura base para cada pantalla */
+.seccion_vista {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Caja del banner de presentacion */
+.caja_banner_inicio {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    padding: 24px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Etiqueta de la fase de evaluacion */
+.insignia_fase {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+/* Titulo del banner */
+.titulo_banner {
+    font-size: 22px;
+    color: #ffffff;
+}
+
+/* Descripcion debajo del titulo */
+.descripcion_banner {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+/* Cuadricula adaptable para las tarjetas */
+.caja_tarjetas_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Caja de cada tarjeta individual */
+.tarjeta_inicio {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+/* Animacion al pasar el mouse sobre la tarjeta */
+.tarjeta_inicio:hover {
+    transform: translateY(-3px);
+    border-color: #3b82f6;
+}
+
+/* Tamaño de los iconos de cada tarjeta */
+.icono_tarjeta {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+/* Titulo de cada tarjeta */
+.titulo_tarjeta {
+    font-size: 16px;
+    color: #ffffff;
+}
+
+/* Texto explicativo dentro de la tarjeta */
+.texto_tarjeta {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.4;
+    flex: 1;
+}
+
+/* Texto del enlace inferior */
+.enlace_tarjeta {
+    font-size: 12px;
+    font-weight: bold;
+    color: #60a5fa;
+    margin-top: 8px;
+}
+
+/* Ajuste visual para la tarjeta de regex para proximanete agregarlo */
+.tarjeta_en_espera {
+    border-color: rgba(245, 158, 11, 0.4);
+    background-color: rgba(30, 41, 59, 0.7);
+}
+
+/* Fila para alinear titulo modulo proximamente */
+.cabecera_tarjeta_espera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Insignia amarilla proximanete */
+.insignia_proxima {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Enlace de color amarillo para el modulo en espera */
+.enlace_espera {
+    color: #f59e0b;
+}
