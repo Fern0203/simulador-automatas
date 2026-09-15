@@ -67,7 +67,7 @@
        
         <section id="vista_inicio" class="seccion_vista">
 
-            <!-- Banner superior de bienvenida -->
+            
             <div class="caja_banner_inicio">
                 <span class="insignia_fase">..</span>
                 <h2 class="titulo_banner">Simulador de Automatas Finitos</h2>
@@ -107,7 +107,80 @@
             </div>
 
         </section>
+     
+        <section id="vista_crear" class="seccion_vista ocultar">
 
+         
+            <div class="barra_subcabecera_crear">
+                <h2 class="titulo_vista">⚙️ Constructor de Autómata</h2>
+                <div class="caja_conmutador_tipo">
+                    <button id="boton_elegir_afn" class="boton_tipo_activo">AFN</button>
+                    <button id="boton_elegir_afd" class="boton_tipo_inactivo">AFD</button>
+                </div>
+            </div>
+
+            
+            <div class="caja_formulario_automata">
+
+                <div class="fila_dos_columnas">
+                   
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Estados (Q) - separados por coma:</label>
+                        <input type="text" id="campo_estados" class="caja_texto_input" placeholder="ej. q0, q1, q2">
+                    </div>
+
+                  
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Alfabeto (Σ) - símbolos por coma:</label>
+                        <input type="text" id="campo_alfabeto" class="caja_texto_input" placeholder="ej. 0, 1  o  a, b">
+                    </div>
+                </div>
+
+                <div class="fila_dos_columnas">
+                    
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Estado Inicial (q0):</label>
+                        <select id="selector_estado_inicial" class="selector_opciones">
+                            <option value="">-- Ingresa primero los estados --</option>
+                        </select>
+                    </div>
+
+                
+                    <div class="campo_formulario">
+                        <label class="etiqueta_campo">Estados Finales (F):</label>
+                        <div id="caja_estados_finales" class="contenedor_checkboxes_finales">
+                            <span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alinear_derecha">
+                    <button id="boton_generar_tabla" class="boton_secundario">
+                         Generar Tabla de Transiciones
+                    </button>
+                </div>
+
+            </div>
+
+            
+            <div id="caja_seccion_matriz" class="caja_formulario_automata ocultar">
+                <div class="cabecera_tabla_matriz">
+                    <h3 class="subtitulo_tabla">Tabla de Transiciones (δ)</h3>
+                    <span id="texto_ayuda_matriz" class="texto_ayuda_tabla">En AFN separa destinos con comas (ej. q0, q1) o usa ε</span>
+                </div>
+
+                <div class="tabla_desplazable">
+                    <table id="tabla_matriz_transiciones" class="tabla_transiciones"></table>
+                </div>
+
+                <div class="alinear_derecha">
+                    <button id="boton_guardar_automata" class="boton_primario">
+                        ✓ Guardar Autómata
+                    </button>
+                </div>
+            </div>
+
+        </section>
     </main>
 
 </body>
