@@ -69,18 +69,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const todas_las_vistas = document.querySelectorAll(".seccion_vista");
 
     function mostrar_pantalla(nombre_vista) {
-        // Ocultamos todas primero
         todas_las_vistas.forEach((vista) => {
             vista.classList.add("ocultar");
         });
 
-        // Mostramos la elegida
         const vista_destino = document.getElementById(nombre_vista);
         if (vista_destino) {
             vista_destino.classList.remove("ocultar");
         }
 
-        // Cerramos el menu lateral si estaba abierto
         cerrar_menu();
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -94,9 +91,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    //botones para elegir tipo de automata (AFN o AFD)
+    // botones para elegir tipo de automata (AFN o AFD)
     const boton_afn = document.getElementById("boton_elegir_afn");
     const boton_afd = document.getElementById("boton_elegir_afd");
+    const texto_descripcion_modo = document.getElementById("texto_descripcion_modo");
     const texto_ayuda_matriz = document.getElementById("texto_ayuda_matriz");
     const caja_seccion_matriz = document.getElementById("caja_seccion_matriz");
     const tabla_matriz = document.getElementById("tabla_matriz_transiciones");
@@ -105,7 +103,14 @@ document.addEventListener("DOMContentLoaded", () => {
         tipo_automata_seleccionado = "AFN";
         boton_afn.className = "boton_tipo_activo";
         boton_afd.className = "boton_tipo_inactivo";
-        texto_ayuda_matriz.textContent = "En AFN separa destinos con comas (ej. q0, q1) o usa ε";
+
+        if (texto_descripcion_modo) {
+            texto_descripcion_modo.textContent = "Modo AFN: Permite transiciones vacías (ε) y múltiples estados destino separados por comas.";
+        }
+        if (texto_ayuda_matriz) {
+            texto_ayuda_matriz.textContent = "En AFN separa destinos con comas (ej. q0, q1) o usa ε";
+        }
+
         // Ocultamos la tabla anterior para obligar a regenerar
         caja_seccion_matriz.classList.add("ocultar");
         tabla_matriz.innerHTML = "";
@@ -115,7 +120,14 @@ document.addEventListener("DOMContentLoaded", () => {
         tipo_automata_seleccionado = "AFD";
         boton_afd.className = "boton_tipo_activo";
         boton_afn.className = "boton_tipo_inactivo";
-        texto_ayuda_matriz.textContent = "En AFD solo se permite un único estado destino por casilla";
+
+        if (texto_descripcion_modo) {
+            texto_descripcion_modo.textContent = "Modo AFD: Cada estado solo puede tener una única transición por símbolo (sin ε).";
+        }
+        if (texto_ayuda_matriz) {
+            texto_ayuda_matriz.textContent = "En AFD solo se permite un único estado destino por casilla";
+        }
+
         // Ocultamos la tabla anterior para obligar a regenerar
         caja_seccion_matriz.classList.add("ocultar");
         tabla_matriz.innerHTML = "";
@@ -123,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     boton_afn.addEventListener("click", seleccionar_afn);
     boton_afd.addEventListener("click", seleccionar_afd);
-
 
     // guardar referencias a los campos de estados, alfabeto, selector de estado inicial y checkboxes de estados finales
     const campo_estados = document.getElementById("campo_estados");
@@ -142,7 +153,13 @@ document.addEventListener("DOMContentLoaded", () => {
     function actualizar_opciones_estados() {
         const lista_estados = limpiar_lista(campo_estados.value);
 
+        // Guardamos los que estaban marcados para no perderlos si solo edita el texto
+        const estados_previamente_marcados = Array.from(
+            document.querySelectorAll(".casilla_estado_final:checked")
+        ).map((cb) => cb.value);
+
         // 1. Limpiar y llenar el selector desplegable (q0)
+        const valor_inicial_anterior = selector_inicial.value;
         selector_inicial.innerHTML = "";
         if (lista_estados.length === 0) {
             selector_inicial.innerHTML = '<option value="">-- Ingresa primero los estados --</option>';
@@ -151,6 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const opcion = document.createElement("option");
                 opcion.value = estado;
                 opcion.textContent = estado;
+                if (estado === valor_inicial_anterior) {
+                    opcion.selected = true;
+                }
                 selector_inicial.appendChild(opcion);
             });
         }
@@ -170,8 +190,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 etiqueta.style.borderRadius = "4px";
                 etiqueta.style.cursor = "pointer";
 
+                const estaba_marcado = estados_previamente_marcados.includes(estado);
+
                 etiqueta.innerHTML = `
-                    <input type="checkbox" value="${estado}" class="casilla_estado_final">
+                    <input type="checkbox" value="${estado}" class="casilla_estado_final" ${estaba_marcado ? "checked" : ""}>
                     <span>${estado}</span>
                 `;
                 caja_finales.appendChild(etiqueta);
@@ -181,7 +203,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Cuando el usuario termina de escribir en el campo estados (sale del input)
     campo_estados.addEventListener("blur", actualizar_opciones_estados);
-
 
     // generar la tabla de transiciones
     const boton_generar_tabla = document.getElementById("boton_generar_tabla");
@@ -196,8 +217,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Aseguramos que los selectores y checkboxes esten sincronizados
-        actualizar_opciones_estados();
+        // Leemos cual es el inicial y cuales estan marcados como finales
+        const estado_inicial = selector_inicial.value;
+        const casillas_finales = document.querySelectorAll(".casilla_estado_final:checked");
+        const estados_finales_marcados = Array.from(casillas_finales).map((cb) => cb.value);
 
         // Si es AFN agregamos la columna epsilon ε
         const columnas = [...alfabeto];
@@ -213,10 +236,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         contenido_html += "</tr></thead><tbody>";
 
-        // Armamos cada fila por cada estado
+        // Armamos cada fila con sus marcas formales (-> y *)
         estados.forEach((estado) => {
+            const es_inicial = (estado === estado_inicial);
+            const es_final = estados_finales_marcados.includes(estado);
+
+            let prefijo_formal = "";
+            if (es_inicial && es_final) {
+                prefijo_formal = "→ * ";
+            } else if (es_inicial) {
+                prefijo_formal = "→ ";
+            } else if (es_final) {
+                prefijo_formal = "* ";
+            }
+
             contenido_html += "<tr>";
-            contenido_html += `<td class="celda_estado_origen">${estado}</td>`;
+            contenido_html += `<td class="celda_estado_origen">${prefijo_formal}${estado}</td>`;
 
             columnas.forEach((columna) => {
                 const placeholder = tipo_automata_seleccionado === "AFN" ? "ej. q0, q1" : "ej. q1";
