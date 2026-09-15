@@ -206,6 +206,78 @@
             </div>
 
         </section>
+
+  
+        <section id="vista_convertir" class="seccion_vista ocultar">
+
+            
+            <div class="barra_subcabecera_accion">
+                <h2 class="titulo_vista">🔄 Conversión de AFN a AFD</h2>
+                <button id="boton_cargar_para_convertir" class="boton_cargar_activo">
+                    📂 Usar Autómata Creado
+                </button>
+            </div>
+
+           
+            <div class="caja_formulario_automata">
+                <p class="texto_explicacion_algoritmo">
+                    Aplica el algoritmo de construcción de subconjuntos para transformar un autómata con no determinismo o saltos vacíos (ε) en un autómata determinista equivalente.
+                </p>
+                <div class="alinear_derecha">
+                    <button id="boton_ejecutar_conversion" class="boton_primario">
+                        ⚡ Convertir a AFD
+                    </button>
+                </div>
+            </div>
+
+            
+            <div id="caja_resultado_conversion" class="caja_formulario_automata ocultar">
+                <div class="cabecera_resultado_grafo">
+                    <h3 class="subtitulo_tabla">AFD Resultante</h3>
+                    <button id="boton_ver_pasos_conversion" class="boton_pasos">
+                        📋 Ver Pasos del Algoritmo
+                    </button>
+                </div>
+                <div id="lienzo_grafo_conversion" class="lienzo_grafo"></div>
+            </div>
+
+        </section>
+
+       
+        <section id="vista_minimizar" class="seccion_vista ocultar">
+
+          
+            <div class="barra_subcabecera_accion">
+                <h2 class="titulo_vista">📉 Minimización de AFD</h2>
+                <button id="boton_cargar_para_minimizar" class="boton_cargar_activo">
+                    📂 Usar AFD Activo
+                </button>
+            </div>
+
+            
+            <div class="caja_formulario_automata">
+                <p class="texto_explicacion_algoritmo">
+                    Elimina estados inaccesibles y agrupa estados equivalentes mediante particiones sucesivas para obtener el autómata con el menor número posible de estados.
+                </p>
+                <div class="alinear_derecha">
+                    <button id="boton_ejecutar_minimizar" class="boton_primario">
+                        ⚡ Minimizar AFD
+                    </button>
+                </div>
+            </div>
+
+           
+            <div id="caja_resultado_minimizar" class="caja_formulario_automata ocultar">
+                <div class="cabecera_resultado_grafo">
+                    <h3 class="subtitulo_tabla">AFD Minimizado</h3>
+                    <button id="boton_ver_pasos_minimizar" class="boton_pasos">
+                        📋 Ver Pasos de Partición
+                    </button>
+                </div>
+                <div id="lienzo_grafo_minimizar" class="lienzo_grafo"></div>
+            </div>
+
+        </section>
     </main>
 
 </body>
