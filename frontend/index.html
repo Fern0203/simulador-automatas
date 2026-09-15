@@ -3,34 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Autómatas — UMG</title>
-    <!-- Tailwind CSS desde CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Simulador de Autómatas</title>
+    <!-- Vinculamos nuestro archivo de diseño externo -->
     <link rel="stylesheet" href="css/estilos.css">
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="cuerpo_pagina">
 
-    <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-md">
-        <div class="flex items-center gap-3">
-            <button id="btn-menu" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition">
-                <span class="text-xl font-bold">☰</span>
+    <!-- CABECERA PRINCIPAL -->
+    <header class="barra_superior">
+        
+        <!-- Caja izquierda: botón de menú y título -->
+        <div class="caja_logo_y_titulo">
+            <button id="boton_abrir_menu" class="boton_menu_icono">
+                ☰
             </button>
-            <div class="flex items-center gap-2">
-                <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">UMG</span>
-                <h1 class="text-base sm:text-lg font-semibold tracking-wide">Simulador de Autómatas</h1>
-            </div>
+            <span class="insignia_universidad">UMG</span>
+            <span class="texto_titulo_proyecto">Simulador de Autómatas</span>
         </div>
-        <button id="btn-integrantes-header" class="text-xs sm:text-sm bg-slate-700 hover:bg-blue-600 px-3 py-1.5 rounded-lg border border-slate-600 transition flex items-center gap-1.5">
-            <span>👥 Integrantes</span>
-        </button>
+
+        <!-- Caja derecha: botón para ver integrantes -->
+        <div class="caja_boton_integrantes">
+            <button id="boton_mostrar_integrantes" class="boton_integrantes">
+                👥 Integrantes
+            </button>
+        </div>
+
     </header>
 
-    
-    <main class="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl">
-            <h2 class="text-xl font-bold text-white mb-2">Bienvenido al Simulador</h2>
-            <p class="text-slate-400 text-sm">Estructura base montada correctamente.</p>
-        </div>
+    <!-- Por ahora dejamos el cuerpo vacío para enfocarnos solo en la barra -->
+    <main class="caja_contenido_principal">
     </main>
 
 </body>
