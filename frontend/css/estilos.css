@@ -582,3 +582,95 @@
     border-color: #3b82f6;
     background-color: #1e293b;
 }
+
+/* Cabecera para separar el titulo de la insignia */
+.cabecera_resultado_grafo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Etiqueta azul que confirma el tipo de automata cargado */
+.insignia_tipo_creado {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+/* Contenedor oscuro donde se montara el grafo interactivo */
+.lienzo_grafo {
+    width: 100%;
+    height: 420px;
+    background-color: #0b1329;
+    border: 2px dashed #334155;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Contenedor para la seccion de prueba de palabras */
+.caja_probar_cadena {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Fila para alinear el input y el boton de simular */
+.fila_entrada_simulacion {
+    display: flex;
+    gap: 8px;
+}
+
+/* Permite que el input ocupe el espacio disponible */
+.flex_input {
+    flex: 1;
+}
+
+/* Boton verde para iniciar la simulacion */
+.boton_exito {
+    background-color: #16a34a;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Efecto hover del boton verde */
+.boton_exito:hover {
+    background-color: #15803d;
+}
+
+/* Caja de alerta para mostrar el veredicto final */
+.caja_mensaje_resultado {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.4;
+}
+
+/* Estilo cuando la cadena es aceptada */
+.resultado_aceptado {
+    background-color: rgba(22, 163, 74, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+/* Estilo cuando la cadena es rechazada */
+.resultado_rechazado {
+    background-color: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
