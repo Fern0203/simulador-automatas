@@ -84,3 +84,123 @@
     background-color: #2563eb; 
     color: #ffffff;
 }
+
+
+/* Utilidad general para ocultar elementos */
+.ocultar {
+    display: none;
+}
+
+/* Fondo oscuro que cubre la pantalla al abrir el menu */
+.fondo_oscuro_menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 150;
+}
+
+/* Caja principal del menu lateral */
+.menu_lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background-color: #1e293b;
+    border-right: 1px solid #334155;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+/* Posicion cuando el menu esta cerrado (fuera de pantalla) */
+.menu_cerrado {
+    transform: translateX(-100%);
+}
+
+/* Posicion cuando el menu esta abierto */
+.menu_abierto {
+    transform: translateX(0);
+}
+
+/* Barra superior dentro del menu lateral */
+.cabecera_menu {
+    padding: 14px 16px;
+    border-bottom: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Titulo dentro del menu lateral */
+.texto_menu_titulo {
+    font-weight: bold;
+    font-size: 15px;
+    color: #f8fafc;
+}
+
+/* Boton con la X para cerrar */
+.boton_cerrar {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Cambio de color del boton cerrar al pasar el cursor */
+.boton_cerrar:hover {
+    color: #ffffff;
+}
+
+/* Contenedor vertical de los botones de seccion */
+.caja_enlaces_menu {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+/* Estilo para los botones individuales de navegacion */
+.boton_seccion {
+    background-color: transparent;
+    border: none;
+    color: #cbd5e1;
+    padding: 10px 12px;
+    text-align: left;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Efecto hover sobre los botones de seccion */
+.boton_seccion:hover {
+    background-color: #334155;
+    color: #ffffff;
+}
+
+/* Texto separador entre grupos de opciones */
+.separador_menu {
+    font-size: 11px;
+    font-weight: bold;
+    color: #64748b;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    padding-left: 8px;
+    text-transform: uppercase;
+}
+
+/* Pie en la parte inferior del menu lateral */
+.pie_menu {
+    padding: 12px;
+    border-top: 1px solid #334155;
+    text-align: center;
+    font-size: 11px;
+    color: #64748b;
+}
