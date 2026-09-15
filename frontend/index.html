@@ -50,18 +50,64 @@
             <button class="boton_seccion" data-vista="vista_convertir">🔄 Conversión AFN a AFD</button>
             <button class="boton_seccion" data-vista="vista_minimizar">📉 Minimización AFD</button>
 
-            <div class="separador_menu">ENTREGA 2</div>
+            <div class="separador_menu">MODULO EXPRESIONES REGULARES</div>
             <button class="boton_seccion" data-vista="vista_regex">🔤 Expresiones Regulares</button>
         </nav>
 
        
         <div class="pie_menu">
-            <span>Ingenieria en Sistemas UMG</span>
+            <span>© 2026 Simulador de Autómatas. Todos los derechos reservados.</span>
         </div>
 
     </aside>
    
+    >
     <main class="caja_contenido_principal">
+
+       
+        <section id="vista_inicio" class="seccion_vista">
+
+            <!-- Banner superior de bienvenida -->
+            <div class="caja_banner_inicio">
+                <span class="insignia_fase">..</span>
+                <h2 class="titulo_banner">Simulador de Automatas Finitos</h2>
+                <p class="descripcion_banner">Crea, simula cadenas paso a paso, convierte de AFN a AFD y minimiza estados equivalentes.</p>
+            </div>
+
+            
+            <div class="caja_tarjetas_grid">
+
+                
+                <div class="tarjeta_inicio" data-vista="vista_crear">
+                    <div class="icono_tarjeta">⚙️</div>
+                    <h3 class="titulo_tarjeta">Crear y Simular</h3>
+                    <p class="texto_tarjeta">Define automatas AFN o AFD manualmente con matriz dinamica y prueba cadenas en vivo.</p>
+                    <span class="enlace_tarjeta">Comenzar diseño →</span>
+                </div>
+
+                
+                <div class="tarjeta_inicio tarjeta_en_espera" data-vista="vista_regex">
+                    <div class="icono_tarjeta">🔤</div>
+                    <div class="cabecera_tarjeta_espera">
+                        <h3 class="titulo_tarjeta">Expresiones Regulares</h3>
+                        <span class="insignia_proxima">En produccion</span>
+                    </div>
+                    <p class="texto_tarjeta">Conversión de expresiones regulares a automatas y validación de archivos logs.</p>
+                    <span class="enlace_tarjeta enlace_espera">En produccion →</span>
+                </div>
+
+             
+                <div id="tarjeta_abrir_integrantes" class="tarjeta_inicio">
+                    <div class="icono_tarjeta">👥</div>
+                    <h3 class="titulo_tarjeta">Equipo de Desarrollo</h3>
+                    <p class="texto_tarjeta">Consulta los nombres de los integrantes, carnés y asignación de roles del proyecto.</p>
+                    <span class="enlace_tarjeta">Ver integrantes →</span>
+                </div>
+
+            </div>
+
+        </section>
+
     </main>
 
 </body>
