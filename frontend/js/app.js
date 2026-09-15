@@ -275,5 +275,80 @@ document.addEventListener("DOMContentLoaded", () => {
         tabla_matriz.innerHTML = contenido_html;
         caja_seccion_matriz.classList.remove("ocultar");
     });
+    
+    // =========================================
+    // 8. GUARDAR AUTOMATA EN MEMORIA
+    // =========================================
+    const boton_guardar_automata = document.getElementById("boton_guardar_automata");
+    const caja_resultado_crear = document.getElementById("caja_resultado_crear");
+    const insignia_estado_automata = document.getElementById("insignia_estado_automata");
 
+    boton_guardar_automata.addEventListener("click", () => {
+        const estados = limpiar_lista(campo_estados.value);
+        const alfabeto = limpiar_lista(campo_alfabeto.value);
+        const estado_inicial = selector_inicial.value;
+        const casillas_finales = document.querySelectorAll(".casilla_estado_final:checked");
+        const estados_finales = Array.from(casillas_finales).map((cb) => cb.value);
+
+        if (!estado_inicial) {
+            alert("Por favor selecciona un estado inicial.");
+            return;
+        }
+
+        // Recorremos todas las celdas de la tabla para extraer las transiciones
+        const celdas = document.querySelectorAll(".celda_matriz_input");
+        const lista_transiciones = [];
+
+        for (let celda of celdas) {
+            const origen = celda.getAttribute("data-origen");
+            const simbolo = celda.getAttribute("data-simbolo");
+            const texto_destinos = celda.value.trim();
+
+            // Si la celda no esta vacia procesamos los destinos
+            if (texto_destinos.length > 0) {
+                const destinos = limpiar_lista(texto_destinos);
+
+                // Validamos que los estados escritos existan en la lista Q
+                for (let destino of destinos) {
+                    if (!estados.includes(destino)) {
+                        alert(`Error: El estado destino '${destino}' no existe en tu lista de estados.`);
+                        celda.focus();
+                        return;
+                    }
+                }
+
+                // En AFD no se permiten bifurcaciones (multiples destinos)
+                if (tipo_automata_seleccionado === "AFD" && destinos.length > 1) {
+                    alert(`Error en AFD: El estado '${origen}' no puede ir a varios destinos con el símbolo '${simbolo}'.`);
+                    celda.focus();
+                    return;
+                }
+
+                lista_transiciones.push({
+                    de: origen,
+                    simbolo: simbolo,
+                    a: destinos
+                });
+            }
+        }
+
+        // Guardamos la estructura formal en nuestra variable global
+        automata_guardado = {
+            tipo: tipo_automata_seleccionado,
+            estados: estados,
+            alfabeto: alfabeto,
+            estado_inicial: estado_inicial,
+            estados_finales: estados_finales,
+            transiciones: lista_transiciones
+        };
+
+        // Avisamos al usuario y mostramos el area de resultado
+        alert(`¡Autómata ${tipo_automata_seleccionado} guardado con éxito!`);
+        
+        insignia_estado_automata.textContent = `${tipo_automata_seleccionado} Activo`;
+        caja_resultado_crear.classList.remove("ocultar");
+
+        // Desplazamos la vista hacia abajo suavemente
+        caja_resultado_crear.scrollIntoView({ behavior: "smooth" });
+    });
 });
