@@ -88,7 +88,7 @@
 
 /* Utilidad general para ocultar elementos */
 .ocultar {
-    display: none;
+    display: none !important;
 }
 
 /* Fondo oscuro que cubre la pantalla al abrir el menu */
