@@ -276,9 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
         caja_seccion_matriz.classList.remove("ocultar");
     });
     
-    // =========================================
-    // 8. GUARDAR AUTOMATA EN MEMORIA
-    // =========================================
+    //guardar el automata creado en memoria para poder usarlo en conversion y minimizacion
     const boton_guardar_automata = document.getElementById("boton_guardar_automata");
     const caja_resultado_crear = document.getElementById("caja_resultado_crear");
     const insignia_estado_automata = document.getElementById("insignia_estado_automata");
@@ -351,4 +349,53 @@ document.addEventListener("DOMContentLoaded", () => {
         // Desplazamos la vista hacia abajo suavemente
         caja_resultado_crear.scrollIntoView({ behavior: "smooth" });
     });
+
+
+    // reutilizamos el automata guardado para cargarlo en las vistas de conversion y minimizacion
+    const boton_cargar_conversion = document.getElementById("boton_cargar_para_convertir");
+    const boton_cargar_minimizar = document.getElementById("boton_cargar_para_minimizar");
+
+    // Boton para cargar el automata en la vista de conversion
+    boton_cargar_conversion.addEventListener("click", () => {
+        if (!automata_guardado) {
+            alert("Primero debes crear y guardar un autómata en la sección 'Crear y Simular'.");
+            return;
+        }
+
+        // Para convertir necesitamos obligatoriamente un AFN
+        if (automata_guardado.tipo !== "AFN") {
+            alert("El autómata guardado es un AFD. Para convertir a AFD necesitas ingresar un AFN.");
+            return;
+        }
+
+        alert(`¡AFN cargado con éxito! Estados: [${automata_guardado.estados.join(", ")}]. Listo para convertir.`);
+    });
+
+    // Boton para cargar el automata en la vista de minimizacion
+    boton_cargar_minimizar.addEventListener("click", () => {
+        if (!automata_guardado) {
+            alert("Primero debes crear y guardar un autómata en la sección 'Crear y Simular'.");
+            return;
+        }
+
+        // Para minimizar necesitamos obligatoriamente un AFD
+        if (automata_guardado.tipo === "AFN") {
+            alert("El autómata guardado es un AFN. Solo se pueden minimizar autómatas deterministas (AFD). Conviértelo primero.");
+            return;
+        }
+
+        alert(`¡AFD cargado con éxito! Estados: [${automata_guardado.estados.join(", ")}]. Listo para minimizar.`);
+    });
+
+
+   // aqui guardamos referencias a los elementos del modal de pasos algorítmicos
+    const titulo_modal_pasos = document.getElementById("titulo_modal_pasos");
+    const contenedor_pasos = document.getElementById("contenedor_contenido_pasos");
+
+    // Dejamos esta funcion global para que el Companero 4 pueda llamarla al recibir los datos del backend
+    window.mostrar_pasos_en_modal = function(titulo, lista_pasos_html) {
+        titulo_modal_pasos.textContent = titulo;
+        contenedor_pasos.innerHTML = lista_pasos_html;
+        modal_pasos.classList.remove("ocultar");
+    };
 });
