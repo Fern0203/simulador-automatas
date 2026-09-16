@@ -147,33 +147,46 @@ function restaurar_color_nodo(id_nodo) {
 }
 
 // Recorre secuencialmente los pasos recibidos del backend
-window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
-    if (!dataset_nodos_crear || !pasos || pasos.length === 0) return;
 
-    // Restaurar todos los nodos primero
+window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
+    if (!dataset_nodos_crear || !pasos || pasos.length === 0) {
+        console.warn("Dataset no disponible o lista de pasos vacía.");
+        return;
+    }
+
+    // 1. Restaurar todos los nodos a su apariencia inicial
     const todos_los_nodos = dataset_nodos_crear.getIds();
     todos_los_nodos.forEach((id) => restaurar_color_nodo(id));
+    if (red_grafo_crear) red_grafo_crear.redraw();
 
+    // 2. Recorrer cada transicion paso a paso
     for (let i = 0; i < pasos.length; i++) {
         const paso = pasos[i];
 
-        // Extraer estados activos del paso actual
-        let activos = [];
-        if (paso.estados_actuales) {
-            activos = paso.estados_actuales;
-        } else if (paso.estado_actual) {
-            activos = [paso.estado_actual];
-        } else if (Array.isArray(paso)) {
-            activos = paso;
-        } else if (typeof paso === "string") {
-            activos = [paso];
-        }
+        // Normalizar 'desde' y 'hacia' como arreglos
+        const origen = Array.isArray(paso.desde) ? paso.desde : (paso.desde ? [paso.desde] : []);
+        const destino = Array.isArray(paso.hacia) ? paso.hacia : (paso.hacia ? [paso.hacia] : []);
 
         const es_ultimo_paso = (i === pasos.length - 1);
 
+        // A. Resaltar estado(s) de origen en amarillo
+        origen.forEach((id) => {
+            if (dataset_nodos_crear.get(id)) {
+                dataset_nodos_crear.update({
+                    id: id,
+                    color: { background: "#854d0e", border: "#facc15" }
+                });
+            }
+        });
+        if (red_grafo_crear) red_grafo_crear.redraw();
+
+        await esperar_tiempo(500);
+
+        // B. Si no es el ultimo paso, transicionar hacia el destino y restaurar origen
         if (!es_ultimo_paso) {
-            // Color amarillo mientras procesa
-            activos.forEach((id) => {
+            origen.forEach((id) => restaurar_color_nodo(id));
+
+            destino.forEach((id) => {
                 if (dataset_nodos_crear.get(id)) {
                     dataset_nodos_crear.update({
                         id: id,
@@ -181,16 +194,19 @@ window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
                     });
                 }
             });
+            if (red_grafo_crear) red_grafo_crear.redraw();
 
-            await esperar_tiempo(700);
+            await esperar_tiempo(600);
 
-            activos.forEach((id) => restaurar_color_nodo(id));
+            destino.forEach((id) => restaurar_color_nodo(id));
         } else {
-            // Ultimo paso: verde si aceptada, rojo si rechazada
+            // C. Ultimo paso: apagar origen y pintar el estado final alcanzado
+            origen.forEach((id) => restaurar_color_nodo(id));
+
             const fondo = fue_aceptada ? "#14532d" : "#7f1d1d";
             const borde = fue_aceptada ? "#22c55e" : "#ef4444";
 
-            activos.forEach((id) => {
+            destino.forEach((id) => {
                 if (dataset_nodos_crear.get(id)) {
                     dataset_nodos_crear.update({
                         id: id,
@@ -198,6 +214,7 @@ window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
                     });
                 }
             });
+            if (red_grafo_crear) red_grafo_crear.redraw();
         }
     }
 };

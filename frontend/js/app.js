@@ -477,8 +477,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
            
            
+            // Imprimimos la respuesta en consola para depurar
+            console.log("Respuesta completa del backend:", resultado);
+
+            // Obtenemos la lista de pasos buscando los nombres mas comunes
+            const lista_pasos = resultado.pasos || resultado.historial || resultado.camino || resultado.recorrido || [];
+
             if (window.animar_recorrido_grafo) {
-                window.animar_recorrido_grafo(resultado.pasos, resultado.aceptada);
+                window.animar_recorrido_grafo(lista_pasos, resultado.aceptada);
             }
 
         } catch (error) {
