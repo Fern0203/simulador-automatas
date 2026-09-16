@@ -348,7 +348,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Desplazamos la vista hacia abajo suavemente
         caja_resultado_crear.scrollIntoView({ behavior: "smooth" });
+
+
+        // Dibujamos el grafo interactivo en el lienzo con Vis-Network
+        if (typeof dibujar_grafo_automata === "function") {
+            red_grafo_crear = dibujar_grafo_automata("lienzo_grafo_crear", automata_guardado);
+        }
     });
+
+    
 
 
     // reutilizamos el automata guardado para cargarlo en las vistas de conversion y minimizacion
@@ -467,9 +475,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
-            // Si el Companero 4 ya creo la funcion de animar el grafo, la ejecutamos
+           
+           
+            // Imprimimos la respuesta en consola para depurar
+            console.log("Respuesta completa del backend:", resultado);
+
+            // Obtenemos la lista de pasos buscando los nombres mas comunes
+            const lista_pasos = resultado.pasos || resultado.historial || resultado.camino || resultado.recorrido || [];
+
             if (window.animar_recorrido_grafo) {
-                window.animar_recorrido_grafo(resultado.pasos);
+                window.animar_recorrido_grafo(lista_pasos, resultado.aceptada);
             }
 
         } catch (error) {
