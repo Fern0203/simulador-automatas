@@ -1,9 +1,12 @@
-// Variables para almacenar las instancias activas de los grafos
+// Referencias globales a las redes y datasets de cada lienzo
 let red_grafo_crear = null;
+let dataset_nodos_crear = null;
+let dataset_aristas_crear = null;
+
 let red_grafo_conversion = null;
 let red_grafo_minimizar = null;
 
-// Opciones visuales base para Vis-Network
+// Configuracion visual de Vis-Network
 const opciones_visuales_grafo = {
     nodes: {
         shape: "circle",
@@ -59,83 +62,142 @@ const opciones_visuales_grafo = {
     }
 };
 
-// Funcion principal para dibujar un automata en un lienzo especifico
+// Dibuja el grafo en el contenedor indicado y guarda los datasets
 function dibujar_grafo_automata(id_contenedor, datos_automata) {
     const contenedor = document.getElementById(id_contenedor);
     if (!contenedor || !datos_automata) return null;
 
-    const nodos = [];
-    const aristas = [];
+    const lista_nodos = [];
+    const lista_aristas = [];
 
-    // 1. Crear los nodos (estados)
+    // 1. Construir nodos
     datos_automata.estados.forEach((estado) => {
         const es_inicial = (estado === datos_automata.estado_inicial);
         const es_final = datos_automata.estados_finales.includes(estado);
 
-        let color_nodo = "#1e293b";
-        let borde_nodo = "#3b82f6";
-        let ancho_borde = 2;
+        let borde_color = es_final ? "#22c55e" : "#3b82f6";
+        let borde_ancho = es_final ? 4 : 2;
+        let etiqueta = es_inicial ? `→ ${estado}` : estado;
 
-        // Si es final, destacamos con doble borde simulado o color verde
-        if (es_final) {
-            borde_nodo = "#22c55e";
-            ancho_borde = 4;
-        }
-
-        // Si es inicial, añadimos un indicador visual
-        let etiqueta_nodo = estado;
-        if (es_inicial) {
-            etiqueta_nodo = `→ ${estado}`;
-        }
-
-        nodos.push({
+        lista_nodos.push({
             id: estado,
-            label: etiqueta_nodo,
-            borderWidth: ancho_borde,
+            label: etiqueta,
+            borderWidth: borde_ancho,
+            es_final: es_final,
+            es_inicial: es_inicial,
             color: {
-                background: color_nodo,
-                border: borde_nodo
+                background: "#1e293b",
+                border: borde_color
             }
         });
     });
 
-    // 2. Agrupar transiciones entre los mismos nodos (ej. '0, 1')
-    const mapa_transiciones = {};
-
-    datos_automata.transiciones.forEach((transicion) => {
-        const origen = transicion.de;
-        const simbolo = transicion.simbolo;
-        const destinos = Array.isArray(transicion.a) ? transicion.a : [transicion.a];
-
+    // 2. Agrupar transiciones con mismo origen y destino
+    const mapa_aristas = {};
+    datos_automata.transiciones.forEach((t) => {
+        const destinos = Array.isArray(t.a) ? t.a : [t.a];
         destinos.forEach((destino) => {
-            const clave = `${origen}->${destino}`;
-            if (!mapa_transiciones[clave]) {
-                mapa_transiciones[clave] = {
-                    de: origen,
-                    a: destino,
-                    simbolos: []
-                };
+            const clave = `${t.de}->${destino}`;
+            if (!mapa_aristas[clave]) {
+                mapa_aristas[clave] = { de: t.de, a: destino, simbolos: [] };
             }
-            if (!mapa_transiciones[clave].simbolos.includes(simbolo)) {
-                mapa_transiciones[clave].simbolos.push(simbolo);
+            if (!mapa_aristas[clave].simbolos.includes(t.simbolo)) {
+                mapa_aristas[clave].simbolos.push(t.simbolo);
             }
         });
     });
 
-    // 3. Crear las aristas con sus simbolos combinados
-    Object.values(mapa_transiciones).forEach((t) => {
-        aristas.push({
+    Object.values(mapa_aristas).forEach((t) => {
+        lista_aristas.push({
             from: t.de,
             to: t.a,
             label: t.simbolos.join(", ")
         });
     });
 
-    // 4. Instanciar la red en Vis-Network
-    const datos_red = {
-        nodes: new vis.DataSet(nodos),
-        edges: new vis.DataSet(aristas)
-    };
+    const dataset_nodos = new vis.DataSet(lista_nodos);
+    const dataset_aristas = new vis.DataSet(lista_aristas);
 
-    return new vis.Network(contenedor, datos_red, opciones_visuales_grafo);
+    if (id_contenedor === "lienzo_grafo_crear") {
+        dataset_nodos_crear = dataset_nodos;
+        dataset_aristas_crear = dataset_aristas;
+    }
+
+    const red = new vis.Network(contenedor, { nodes: dataset_nodos, edges: dataset_aristas }, opciones_visuales_grafo);
+    return red;
 }
+
+// Pausa en milisegundos para la animacion
+function esperar_tiempo(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Restaura los colores base del nodo segun si es final o normal
+function restaurar_color_nodo(id_nodo) {
+    const nodo = dataset_nodos_crear.get(id_nodo);
+    if (!nodo) return;
+
+    dataset_nodos_crear.update({
+        id: id_nodo,
+        color: {
+            background: "#1e293b",
+            border: nodo.es_final ? "#22c55e" : "#3b82f6"
+        }
+    });
+}
+
+// Recorre secuencialmente los pasos recibidos del backend
+window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
+    if (!dataset_nodos_crear || !pasos || pasos.length === 0) return;
+
+    // Restaurar todos los nodos primero
+    const todos_los_nodos = dataset_nodos_crear.getIds();
+    todos_los_nodos.forEach((id) => restaurar_color_nodo(id));
+
+    for (let i = 0; i < pasos.length; i++) {
+        const paso = pasos[i];
+
+        // Extraer estados activos del paso actual
+        let activos = [];
+        if (paso.estados_actuales) {
+            activos = paso.estados_actuales;
+        } else if (paso.estado_actual) {
+            activos = [paso.estado_actual];
+        } else if (Array.isArray(paso)) {
+            activos = paso;
+        } else if (typeof paso === "string") {
+            activos = [paso];
+        }
+
+        const es_ultimo_paso = (i === pasos.length - 1);
+
+        if (!es_ultimo_paso) {
+            // Color amarillo mientras procesa
+            activos.forEach((id) => {
+                if (dataset_nodos_crear.get(id)) {
+                    dataset_nodos_crear.update({
+                        id: id,
+                        color: { background: "#854d0e", border: "#facc15" }
+                    });
+                }
+            });
+
+            await esperar_tiempo(700);
+
+            activos.forEach((id) => restaurar_color_nodo(id));
+        } else {
+            // Ultimo paso: verde si aceptada, rojo si rechazada
+            const fondo = fue_aceptada ? "#14532d" : "#7f1d1d";
+            const borde = fue_aceptada ? "#22c55e" : "#ef4444";
+
+            activos.forEach((id) => {
+                if (dataset_nodos_crear.get(id)) {
+                    dataset_nodos_crear.update({
+                        id: id,
+                        color: { background: fondo, border: borde }
+                    });
+                }
+            });
+        }
+    }
+};

@@ -475,9 +475,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
-            // Si el Companero 4 ya creo la funcion de animar el grafo, la ejecutamos
+           
+           
             if (window.animar_recorrido_grafo) {
-                window.animar_recorrido_grafo(resultado.pasos);
+                window.animar_recorrido_grafo(resultado.pasos, resultado.aceptada);
             }
 
         } catch (error) {
