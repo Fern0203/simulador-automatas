@@ -348,7 +348,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Desplazamos la vista hacia abajo suavemente
         caja_resultado_crear.scrollIntoView({ behavior: "smooth" });
+
+
+        // Dibujamos el grafo interactivo en el lienzo con Vis-Network
+        if (typeof dibujar_grafo_automata === "function") {
+            red_grafo_crear = dibujar_grafo_automata("lienzo_grafo_crear", automata_guardado);
+        }
     });
+
+    
 
 
     // reutilizamos el automata guardado para cargarlo en las vistas de conversion y minimizacion
