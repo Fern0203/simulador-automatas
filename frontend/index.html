@@ -131,7 +131,7 @@
          
             
 
-            <!-- Barra superior con titulo y selector AFN / AFD -->
+            
             <div class="barra_subcabecera_crear">
                 <h2 class="titulo_vista">⚙️ Constructor de Autómata</h2>
                 <div class="caja_conmutador_tipo">
@@ -233,75 +233,131 @@
         </section>
 
   
+   
         <section id="vista_convertir" class="seccion_vista ocultar">
-
-            
-            <div class="barra_subcabecera_accion">
-                <h2 class="titulo_vista">🔄 Conversión de AFN a AFD</h2>
-                <button id="boton_cargar_para_convertir" class="boton_cargar_activo">
-                    📂 Usar Autómata Creado
-                </button>
-            </div>
-
-           
-            <div class="caja_formulario_automata">
-                <p class="texto_explicacion_algoritmo">
-                    Aplica el algoritmo de construcción de subconjuntos para transformar un autómata con no determinismo o saltos vacíos (ε) en un autómata determinista equivalente.
-                </p>
-                <div class="alinear_derecha">
-                    <button id="boton_ejecutar_conversion" class="boton_primario">
-                        ⚡ Convertir a AFD
-                    </button>
-                </div>
-            </div>
-
-            
-            <div id="caja_resultado_conversion" class="caja_formulario_automata ocultar">
-                <div class="cabecera_resultado_grafo">
-                    <h3 class="subtitulo_tabla">AFD Resultante</h3>
-                    <button id="boton_ver_pasos_conversion" class="boton_pasos">
-                        📋 Ver Pasos del Algoritmo
-                    </button>
-                </div>
-                <div id="lienzo_grafo_conversion" class="lienzo_grafo"></div>
-            </div>
-
-        </section>
-
-       
-        <section id="vista_minimizar" class="seccion_vista ocultar">
+            <h2 class="titulo_vista">🔄 Conversión de AFN a AFD</h2>
+            <p class="texto_ayuda_vacio" style="margin-bottom: 16px;">
+                Ingresa tu autómata no determinista (con o sin saltos vacíos ε). Se aplicará el algoritmo de construcción de subconjuntos.
+            </p>
 
           
-            <div class="barra_subcabecera_accion">
-                <h2 class="titulo_vista">📉 Minimización de AFD</h2>
-                <button id="boton_cargar_para_minimizar" class="boton_cargar_activo">
-                    📂 Usar AFD Activo
+            <div class="tarjeta_formulario">
+                <div class="fila_dos_columnas">
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Estados (Q) separados por comas:</label>
+                        <input type="text" id="campo_estados_convertir" class="campo_texto" placeholder="ej. q0, q1, q2">
+                    </div>
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Alfabeto (Σ) separado por comas:</label>
+                        <input type="text" id="campo_alfabeto_convertir" class="campo_texto" placeholder="ej. 0, 1">
+                    </div>
+                </div>
+
+                <div class="fila_dos_columnas" style="margin-top: 14px;">
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Estado Inicial (q0):</label>
+                        <select id="selector_inicial_convertir" class="campo_texto">
+                            <option value="">-- Ingresa primero los estados --</option>
+                        </select>
+                    </div>
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Estados de Aceptación (F):</label>
+                        <div id="caja_finales_convertir" class="caja_checkboxes_finales">
+                            <span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="boton_generar_tabla_convertir" class="boton_accion_secundario" style="margin-top: 16px; width: 100%;">
+                    ⚡ Generar Matriz de Transiciones (AFN)
                 </button>
             </div>
 
-            
-            <div class="caja_formulario_automata">
-                <p class="texto_explicacion_algoritmo">
-                    Elimina estados inaccesibles y agrupa estados equivalentes mediante particiones sucesivas para obtener el autómata con el menor número posible de estados.
-                </p>
-                <div class="alinear_derecha">
-                    <button id="boton_ejecutar_minimizar" class="boton_primario">
-                        ⚡ Minimizar AFD
+         
+            <div id="caja_matriz_convertir" class="tarjeta_formulario ocultar" style="margin-top: 16px;">
+                <h3 class="subtitulo_tarjeta">Matriz de Transiciones AFN</h3>
+                <p class="texto_descripcion_modo">Separa destinos con comas (ej. q0, q1) o deja vacío si no hay transición.</p>
+                <div class="caja_tabla_scroll">
+                    <table id="tabla_matriz_convertir" class="tabla_matriz"></table>
+                </div>
+                <button id="boton_ejecutar_conversion" class="boton_accion_primario" style="margin-top: 16px; width: 100%;">
+                    ⚡ Convertir a AFD y Dibujar Grafo
+                </button>
+            </div>
+
+         
+            <div id="caja_resultado_conversion" class="tarjeta_formulario ocultar" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 class="subtitulo_tarjeta" style="color: #4ade80;">AFD Resultante (Determinista)</h3>
+                    <button id="boton_ver_pasos_conversion" class="boton_accion_secundario" style="padding: 6px 12px; font-size: 12px;">
+                        📋 Ver Pasos de Subconjuntos
                     </button>
                 </div>
+                <div id="lienzo_grafo_conversion" class="contenedor_lienzo_grafo"></div>
+            </div>
+        </section>
+
+
+        <section id="vista_minimizar" class="seccion_vista ocultar">
+            <h2 class="titulo_vista">📉 Minimización de AFD</h2>
+            <p class="texto_ayuda_vacio" style="margin-bottom: 16px;">
+                Ingresa tu autómata determinista. Se agruparán los estados equivalentes en clases de equivalencia (particiones k).
+            </p>
+
+           
+            <div class="tarjeta_formulario">
+                <div class="fila_dos_columnas">
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Estados (Q) separados por comas:</label>
+                        <input type="text" id="campo_estados_minimizar" class="campo_texto" placeholder="ej. A, B, C, D">
+                    </div>
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Alfabeto (Σ) separado por comas:</label>
+                        <input type="text" id="campo_alfabeto_minimizar" class="campo_texto" placeholder="ej. 0, 1">
+                    </div>
+                </div>
+
+                <div class="fila_dos_columnas" style="margin-top: 14px;">
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Estado Inicial (q0):</label>
+                        <select id="selector_inicial_minimizar" class="campo_texto">
+                            <option value="">-- Ingresa primero los estados --</option>
+                        </select>
+                    </div>
+                    <div class="grupo_campo">
+                        <label class="etiqueta_campo">Estados de Aceptación (F):</label>
+                        <div id="caja_finales_minimizar" class="caja_checkboxes_finales">
+                            <span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="boton_generar_tabla_minimizar" class="boton_accion_secundario" style="margin-top: 16px; width: 100%;">
+                    ⚡ Generar Matriz de Transiciones (AFD)
+                </button>
+            </div>
+
+            <div id="caja_matriz_minimizar" class="tarjeta_formulario ocultar" style="margin-top: 16px;">
+                <h3 class="subtitulo_tarjeta">Matriz de Transiciones AFD</h3>
+                <p class="texto_descripcion_modo">Por ser AFD, ingresa únicamente un solo estado destino por casilla.</p>
+                <div class="caja_tabla_scroll">
+                    <table id="tabla_matriz_minimizar" class="tabla_matriz"></table>
+                </div>
+                <button id="boton_ejecutar_minimizar" class="boton_accion_primario" style="margin-top: 16px; width: 100%;">
+                    ⚡ Minimizar AFD y Dibujar Grafo
+                </button>
             </div>
 
            
-            <div id="caja_resultado_minimizar" class="caja_formulario_automata ocultar">
-                <div class="cabecera_resultado_grafo">
-                    <h3 class="subtitulo_tabla">AFD Minimizado</h3>
-                    <button id="boton_ver_pasos_minimizar" class="boton_pasos">
-                        📋 Ver Pasos de Partición
+            <div id="caja_resultado_minimizar" class="tarjeta_formulario ocultar" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 class="subtitulo_tarjeta" style="color: #60a5fa;">AFD Minimizado Resultante</h3>
+                    <button id="boton_ver_pasos_minimizar" class="boton_accion_secundario" style="padding: 6px 12px; font-size: 12px;">
+                        📋 Ver Particiones del Algoritmo
                     </button>
                 </div>
-                <div id="lienzo_grafo_minimizar" class="lienzo_grafo"></div>
+                <div id="lienzo_grafo_minimizar" class="contenedor_lienzo_grafo"></div>
             </div>
-
         </section>
 
         <!-- VISTA DE EXPRESIONES REGULARES LUEGO SE TERMINARA -->

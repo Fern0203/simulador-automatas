@@ -865,3 +865,161 @@
     margin-top: -12px;
     margin-bottom: 4px;
 }
+
+
+
+
+.tarjeta_formulario {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.subtitulo_tarjeta {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f8fafc;
+    margin-bottom: 8px;
+}
+
+.fila_dos_columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 640px) {
+    .fila_dos_columnas {
+        grid-template-columns: 1fr;
+    }
+}
+
+.grupo_campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.etiqueta_campo {
+    font-size: 13px;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.campo_texto {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #f8fafc;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+}
+
+.campo_texto:focus {
+    border-color: #3b82f6;
+}
+
+.caja_checkboxes_finales {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 40px;
+    align-items: center;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+.boton_accion_primario {
+    background-color: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.boton_accion_primario:hover {
+    background-color: #1d4ed8;
+}
+
+.boton_accion_secundario {
+    background-color: #334155;
+    color: #f8fafc;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #475569;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+}
+
+.boton_accion_secundario:hover {
+    background-color: #475569;
+}
+
+.caja_tabla_scroll {
+    overflow-x: auto;
+    margin-top: 12px;
+}
+
+.tabla_matriz {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.tabla_matriz th {
+    background-color: #0f172a;
+    color: #94a3b8;
+    border: 1px solid #334155;
+    padding: 8px;
+    text-align: center;
+}
+
+.tabla_matriz td {
+    border: 1px solid #334155;
+    padding: 4px;
+    text-align: center;
+}
+
+.celda_estado_origen {
+    font-weight: bold;
+    color: #60a5fa;
+    background-color: #1e293b;
+    min-width: 80px;
+    padding: 8px;
+}
+
+.input_celda_transicion {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    color: #f8fafc;
+    padding: 6px 8px;
+    text-align: center;
+    border-radius: 4px;
+    width: 100%;
+    outline: none;
+}
+
+.input_celda_transicion:focus {
+    border-color: #3b82f6;
+}
+
+.contenedor_lienzo_grafo {
+    height: 400px;
+    width: 100%;
+    background-color: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 8px;
+    margin-top: 10px;
+}
