@@ -1,4 +1,4 @@
-// Referencias globales a las redes y datasets de cada lienzo
+// Variables globales para almacenar las redes de Vis-Network y sus datasets
 let red_grafo_crear = null;
 let dataset_nodos_crear = null;
 let dataset_aristas_crear = null;
@@ -6,7 +6,7 @@ let dataset_aristas_crear = null;
 let red_grafo_conversion = null;
 let red_grafo_minimizar = null;
 
-// Configuracion visual de Vis-Network
+// Configuración visual de Vis-Network (corregida sin 'bold: true')
 const opciones_visuales_grafo = {
     nodes: {
         shape: "circle",
@@ -14,8 +14,7 @@ const opciones_visuales_grafo = {
         font: {
             color: "#ffffff",
             size: 14,
-            face: "Arial",
-            bold: true
+            face: "Arial"
         },
         color: {
             background: "#1e293b",
@@ -62,18 +61,81 @@ const opciones_visuales_grafo = {
     }
 };
 
-// Dibuja el grafo en el contenedor indicado y guarda los datasets
-function dibujar_grafo_automata(id_contenedor, datos_automata) {
+// fucion principal para dibujar un grafo a partir de un objeto de autómata
+function dibujar_grafo_automata(id_contenedor, datos_recibidos) {
     const contenedor = document.getElementById(id_contenedor);
-    if (!contenedor || !datos_automata) return null;
+    if (!contenedor || !datos_recibidos) return null;
+
+    // 1. Desempaquetar si el autómata viene anidado en una propiedad
+    let aut = datos_recibidos;
+    const posibles_claves = [
+        "automata", "afd", "automata_afd", "automata_convertido", 
+        "automata_minimizado", "nuevo_automata", "afd_convertido", 
+        "afd_resultado", "resultado", "data"
+    ];
+
+    for (const clave of posibles_claves) {
+        if (datos_recibidos[clave] && typeof datos_recibidos[clave] === "object") {
+            aut = datos_recibidos[clave];
+            break;
+        }
+    }
+
+    // 2. Extraer y normalizar los estados (soporta listas, sets u objetos con claves)
+    let lista_estados_cruda = aut.estados || aut.states || aut.Q || aut.nodos || [];
+    let estados_normalizados = [];
+
+    if (Array.isArray(lista_estados_cruda)) {
+        estados_normalizados = lista_estados_cruda.map(e => Array.isArray(e) ? e.join("") : String(e));
+    } else if (typeof lista_estados_cruda === "object" && lista_estados_cruda !== null) {
+        estados_normalizados = Object.keys(lista_estados_cruda);
+    }
+
+    if (estados_normalizados.length === 0) {
+        console.error("El autómata a dibujar no contiene una lista válida de estados:", aut);
+        return null;
+    }
+
+    // 3. Normalizar estado inicial y estados de aceptación
+    let inicial_crudo = aut.estado_inicial ?? aut.inicial ?? aut.q0 ?? aut.initial_state ?? "";
+    const estado_inicial = Array.isArray(inicial_crudo) ? inicial_crudo.join("") : String(inicial_crudo);
+
+    let finales_crudos = aut.estados_finales ?? aut.finales ?? aut.F ?? aut.accept_states ?? [];
+    if (!Array.isArray(finales_crudos)) {
+        finales_crudos = (typeof finales_crudos === "object" && finales_crudos !== null)
+            ? Object.keys(finales_crudos) 
+            : [finales_crudos];
+    }
+    const estados_finales = finales_crudos.map(f => Array.isArray(f) ? f.join("") : String(f));
+
+    // 4. Normalizar transiciones (soporta lista de objetos o diccionario anidado)
+    let lista_transiciones = [];
+    const transiciones_crudas = aut.transiciones || aut.transitions || aut.delta || [];
+
+    if (Array.isArray(transiciones_crudas)) {
+        lista_transiciones = transiciones_crudas;
+    } else if (typeof transiciones_crudas === "object" && transiciones_crudas !== null) {
+        // Convierte diccionarios tipo { q0: { a: ["q1"], b: ["q0"] } } al formato estándar
+        for (const [origen, mapeo_simbolos] of Object.entries(transiciones_crudas)) {
+            if (typeof mapeo_simbolos === "object" && mapeo_simbolos !== null) {
+                for (const [simbolo, dest] of Object.entries(mapeo_simbolos)) {
+                    lista_transiciones.push({
+                        de: origen,
+                        simbolo: simbolo,
+                        a: Array.isArray(dest) ? dest : [dest]
+                    });
+                }
+            }
+        }
+    }
 
     const lista_nodos = [];
     const lista_aristas = [];
 
-    // 1. Construir nodos
-    datos_automata.estados.forEach((estado) => {
-        const es_inicial = (estado === datos_automata.estado_inicial);
-        const es_final = datos_automata.estados_finales.includes(estado);
+    // Construcción de nodos para Vis-Network
+    estados_normalizados.forEach((estado) => {
+        const es_inicial = (estado === estado_inicial);
+        const es_final = estados_finales.includes(estado);
 
         let borde_color = es_final ? "#22c55e" : "#3b82f6";
         let borde_ancho = es_final ? 4 : 2;
@@ -92,17 +154,27 @@ function dibujar_grafo_automata(id_contenedor, datos_automata) {
         });
     });
 
-    // 2. Agrupar transiciones con mismo origen y destino
+    // 5. Agrupar aristas con mismo origen y destino
     const mapa_aristas = {};
-    datos_automata.transiciones.forEach((t) => {
-        const destinos = Array.isArray(t.a) ? t.a : [t.a];
-        destinos.forEach((destino) => {
-            const clave = `${t.de}->${destino}`;
-            if (!mapa_aristas[clave]) {
-                mapa_aristas[clave] = { de: t.de, a: destino, simbolos: [] };
-            }
-            if (!mapa_aristas[clave].simbolos.includes(t.simbolo)) {
-                mapa_aristas[clave].simbolos.push(t.simbolo);
+    lista_transiciones.forEach((t) => {
+        const origen_crudo = t.de ?? t.origen ?? t.from ?? "";
+        const origen = Array.isArray(origen_crudo) ? origen_crudo.join("") : String(origen_crudo);
+
+        const simbolo = String(t.simbolo ?? t.symbol ?? "");
+        const destinos_crudos = t.a ?? t.hacia ?? t.to ?? t.destino ?? [];
+        const destinos = Array.isArray(destinos_crudos) ? destinos_crudos : [destinos_crudos];
+
+        destinos.forEach((d) => {
+            if (d !== undefined && d !== null && d !== "") {
+                const destino = Array.isArray(d) ? d.join("") : String(d);
+                const clave = `${origen}->${destino}`;
+
+                if (!mapa_aristas[clave]) {
+                    mapa_aristas[clave] = { de: origen, a: destino, simbolos: [] };
+                }
+                if (!mapa_aristas[clave].simbolos.includes(simbolo)) {
+                    mapa_aristas[clave].simbolos.push(simbolo);
+                }
             }
         });
     });
@@ -123,17 +195,17 @@ function dibujar_grafo_automata(id_contenedor, datos_automata) {
         dataset_aristas_crear = dataset_aristas;
     }
 
-    const red = new vis.Network(contenedor, { nodes: dataset_nodos, edges: dataset_aristas }, opciones_visuales_grafo);
-    return red;
+    return new vis.Network(contenedor, { nodes: dataset_nodos, edges: dataset_aristas }, opciones_visuales_grafo);
 }
 
-// Pausa en milisegundos para la animacion
+// Pausa en milisegundos para la animación
 function esperar_tiempo(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Restaura los colores base del nodo segun si es final o normal
+// Restaura los colores base de un nodo según su tipo
 function restaurar_color_nodo(id_nodo) {
+    if (!dataset_nodos_crear) return;
     const nodo = dataset_nodos_crear.get(id_nodo);
     if (!nodo) return;
 
@@ -146,8 +218,7 @@ function restaurar_color_nodo(id_nodo) {
     });
 }
 
-// Recorre secuencialmente los pasos recibidos del backend
-
+// animación paso a paso de un recorrido en el grafo
 window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
     if (!dataset_nodos_crear || !pasos || pasos.length === 0) {
         console.warn("Dataset no disponible o lista de pasos vacía.");
@@ -159,11 +230,11 @@ window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
     todos_los_nodos.forEach((id) => restaurar_color_nodo(id));
     if (red_grafo_crear) red_grafo_crear.redraw();
 
-    // 2. Recorrer cada transicion paso a paso
+    // 2. Recorrer cada transición paso a paso
     for (let i = 0; i < pasos.length; i++) {
         const paso = pasos[i];
 
-        // Normalizar 'desde' y 'hacia' como arreglos
+        // Normalizar 'desde' y 'hacia'
         const origen = Array.isArray(paso.desde) ? paso.desde : (paso.desde ? [paso.desde] : []);
         const destino = Array.isArray(paso.hacia) ? paso.hacia : (paso.hacia ? [paso.hacia] : []);
 
@@ -182,7 +253,7 @@ window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
 
         await esperar_tiempo(500);
 
-        // B. Si no es el ultimo paso, transicionar hacia el destino y restaurar origen
+        // B. Si no es el último paso, transicionar hacia el destino y restaurar origen
         if (!es_ultimo_paso) {
             origen.forEach((id) => restaurar_color_nodo(id));
 
@@ -200,7 +271,7 @@ window.animar_recorrido_grafo = async function(pasos, fue_aceptada) {
 
             destino.forEach((id) => restaurar_color_nodo(id));
         } else {
-            // C. Ultimo paso: apagar origen y pintar el estado final alcanzado
+            // C. Último paso: apagar origen y pintar el estado final alcanzado
             origen.forEach((id) => restaurar_color_nodo(id));
 
             const fondo = fue_aceptada ? "#14532d" : "#7f1d1d";
