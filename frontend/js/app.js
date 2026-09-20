@@ -309,6 +309,35 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    /* Botón para regresar al inicio */
+    const contenedorVista = [document.getElementById("vista_crear"), document.getElementById("vista_convertir"), document.getElementById("vista_minimizar")];
+    const botonVolverInicio = `
+        <div class="volver_inicio">
+            <button class="boton_secundario boton_ir_inicio" data-vista="vista_inicio">
+                ← Volver al Inicio
+            </button>
+        </div>
+    `;
+    contenedorVista.forEach((vistas) => {
+        vistas.insertAdjacentHTML('afterbegin', botonVolverInicio);
+    });
+    
+    const enlaceVolverInicio = document.querySelectorAll('.volver_inicio');
+    enlaceVolverInicio.forEach((enlaceVolver) => {
+        enlaceVolver.addEventListener("click", () => {
+        const secciones = document.querySelectorAll('.seccion_vista');
+
+        secciones.forEach(secciones => {
+            secciones.classList.add('ocultar');
+        });
+
+        const vistaIncio = document.getElementById('vista_inicio');
+        if(vistaIncio){
+            vistaIncio.classList.remove('ocultar');
+        }
+    });
+    });
+
     // 5. MÓDULO PRINCIPAL: CREACIÓN DE AUTÓMATAS
     const boton_afn = document.getElementById("boton_elegir_afn");
     const boton_afd = document.getElementById("boton_elegir_afd");

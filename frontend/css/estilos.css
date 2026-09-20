@@ -737,6 +737,13 @@
     justify-content: center;
 }
 
+/* Configuración de botón para volver al inicio */
+.volver_inicio {
+    display: flex;
+    justify-content: start;
+    margin: 0 0 5px 0;
+}
+
 /* Tarjeta centrada para la entrega 2 */
 .caja_modulo_espera {
     background-color: #1e293b;
