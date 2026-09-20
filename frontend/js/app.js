@@ -309,6 +309,64 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    /* Limpiar campos */
+    function limpiarCampos() {
+        const inputsTexto = document.querySelectorAll('.caja_texto_input, .campo_texto');
+        inputsTexto.forEach(input => {
+            input.value = '';
+        });
+
+        const selectores = document.querySelectorAll('select');
+        selectores.forEach(select => {
+            select.selectedIndex = 0;
+            if (select.id.includes('selector')) {
+                select.innerHTML = '<option value="">-- Ingresa primero los estados --</option>';
+            }
+        });
+
+        const contenedoresCheckboxes = [
+            document.getElementById('caja_estados_finales'),
+            document.getElementById('caja_finales_convertir'),
+            document.getElementById('caja_finales_minimizar')
+        ];
+        contenedoresCheckboxes.forEach(contenedor => {
+            if (contenedor) {
+                contenedor.innerHTML = '<span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>';
+            }
+        });
+
+        const tablas = ['tabla_matriz_transiciones', 'tabla_matriz_convertir', 'tabla_matriz_minimizar'];
+        tablas.forEach(idTabla => {
+            const tabla = document.getElementById(idTabla);
+            if (tabla) tabla.innerHTML = '';
+        });
+
+        const seccionesOcultar = [
+            'caja_seccion_matriz',
+            'caja_resultado_crear',
+            'caja_resultado_simulacion',
+            'caja_matriz_convertir',
+            'caja_resultado_conversion',
+            'caja_matriz_minimizar',
+            'caja_resultado_minimizar'
+        ];
+        seccionesOcultar.forEach(idSeccion => {
+            const elem = document.getElementById(idSeccion);
+            if (elem) elem.classList.add('ocultar');
+        });
+
+        const cajaResultadoSim = document.getElementById('caja_resultado_simulacion');
+        if (cajaResultadoSim) cajaResultadoSim.innerHTML = '';
+    }
+
+    const botonesLimpiar = document.querySelectorAll('.limpiar-campos');
+    botonesLimpiar.forEach(boton => {
+        boton.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevenir cualquier envío accidental si está dentro de un form
+            limpiarCampos();
+        });
+    });
+
     /* Botón para regresar al inicio */
     const contenedorVista = [document.getElementById("vista_crear"), document.getElementById("vista_convertir"), document.getElementById("vista_minimizar")];
     const botonVolverInicio = `
@@ -325,17 +383,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const enlaceVolverInicio = document.querySelectorAll('.volver_inicio');
     enlaceVolverInicio.forEach((enlaceVolver) => {
         enlaceVolver.addEventListener("click", () => {
-        const secciones = document.querySelectorAll('.seccion_vista');
+            const secciones = document.querySelectorAll('.seccion_vista');
 
-        secciones.forEach(secciones => {
-            secciones.classList.add('ocultar');
+            secciones.forEach(secciones => {
+                secciones.classList.add('ocultar');
+            });
+
+            const vistaIncio = document.getElementById('vista_inicio');
+            if(vistaIncio){
+                vistaIncio.classList.remove('ocultar');
+            }
+
+            limpiarCampos();
         });
-
-        const vistaIncio = document.getElementById('vista_inicio');
-        if(vistaIncio){
-            vistaIncio.classList.remove('ocultar');
-        }
-    });
     });
 
     // 5. MÓDULO PRINCIPAL: CREACIÓN DE AUTÓMATAS

@@ -469,11 +469,17 @@
 /* Contenedor para alinear botones a la derecha */
 .alinear_derecha {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Boton para limpiar los campos */
+.limpiar-campos {
+    justify-content: start;
 }
 
 /* Boton gris de accion secundaria */
-.boton_secundario {
+.boton_secundario, .limpiar-campos {
     background-color: #334155;
     color: #ffffff;
     border: 1px solid #475569;
@@ -485,7 +491,7 @@
 }
 
 /* Hover del boton secundario */
-.boton_secundario:hover {
+.boton_secundario:hover, .limpiar-campos:hover {
     background-color: #475569;
 }
 
