@@ -217,9 +217,7 @@ async function enviar_automata_backend(url_endpoint, objeto_payload) {
     return await respuesta.json();
 }
 
-// =========================================================
-// INICIALIZACIÓN DE COMPONENTES DOM
-// =========================================================
+// inicialización de eventos al cargar el DOM
 document.addEventListener("DOMContentLoaded", () => {
 
     // 1. MENU LATERAL
@@ -413,7 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 transiciones: transiciones
             };
 
-            alert(`¡Autómata ${tipo_automata_seleccionado} guardado con éxito!`);
+            alert(`¡Autómata ${tipo_automata_seleccionado} generado con éxito!`);
             insignia_estado_automata.textContent = `${tipo_automata_seleccionado} Activo`;
             caja_resultado_crear.classList.remove("ocultar");
             caja_resultado_crear.scrollIntoView({ behavior: "smooth" });
@@ -488,9 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // =========================================================
-    // 6. MÓDULO INDEPENDIENTE: CONVERSIÓN AFN A AFD
-    // =========================================================
+    //módulo de conversión AFN → AFD
     const campo_estados_conv = document.getElementById("campo_estados_convertir");
     const campo_alfabeto_conv = document.getElementById("campo_alfabeto_convertir");
     const selector_inicial_conv = document.getElementById("selector_inicial_convertir");
