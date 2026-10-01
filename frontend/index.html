@@ -3,451 +3,904 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Autómatas</title>
-    
-    <link rel="stylesheet" href="css/estilos.css">
+    <title>Simulador de Autómatas | UMG</title>
+
+    <!--
+        GUÍA RÁPIDA PARA NO ROMPER EL JAVASCRIPT
+        - Todos los id de esta página los usan app.js y grafo.js: no los cambies.
+        - data-vista="..." convierte cualquier elemento en un botón que abre esa vista.
+        - Clases que app.js usa para buscar elementos (no son de diseño, no las quites):
+            seccion_vista, ocultar, menu_cerrado / menu_abierto, limpiar-campos,
+            caja_texto_input y campo_texto (son los campos que borra "Limpiar Campos").
+        - Clases que app.js pone o genera por su cuenta; su estilo está en el <style> de abajo:
+            boton_tipo_activo / boton_tipo_inactivo, caja_mensaje_resultado,
+            resultado_aceptado / resultado_rechazado, texto_ayuda_vacio,
+            celda_estado_origen, input_celda_transicion, volver_inicio, boton_ir_inicio.
+        - Todo lo demás son clases de Tailwind y se pueden cambiar libremente.
+    -->
+
+    <!-- Tema claro / oscuro (parte del diseño nuevo, no de app.js).
+         Se aplica antes de pintar la página para que no parpadee. -->
+    <script>
+        try {
+            if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {}
+
+        function alternarTema() {
+            const oscuro = document.documentElement.classList.toggle('dark');
+            try { localStorage.setItem('theme', oscuro ? 'dark' : 'light'); } catch (e) {}
+        }
+    </script>
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#1c72a5',
+                            'blue-hover': '#165c85',
+                            'blue-light': '#4ea5db',
+                            red: '#cb3332',
+                            'red-hover': '#b22b2a',
+                            gold: '#b0863a',
+                            'gold-hover': '#99732f',
+                            'gold-light': '#dfb260'
+                        },
+                        oscuro: {
+                            fondo: '#09090b',
+                            tarjeta: '#121215'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+                    },
+                    keyframes: {
+                        aparecer: {
+                            '0%': { opacity: '0', transform: 'scale(.96)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' }
+                        }
+                    },
+                    animation: {
+                        aparecer: 'aparecer .15s ease-out'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
     <script src="js/vis-network.min.js"></script>
+
+    <style type="text/tailwindcss">
+        /* =====================================================================
+           GENERALES DEL DISEÑO
+           ===================================================================== */
+        body { transition: background-color .25s ease, color .25s ease; }
+        .dark { color-scheme: dark; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #27272a; }
+
+        /* Fondo de puntos de los lienzos donde grafo.js dibuja.
+           Los lienzos son oscuros en los dos temas porque grafo.js pinta nodos oscuros
+           y el texto de las flechas en blanco sobre #0f172a (en un fondo claro no se leería). */
+        .canvas-grid {
+            background-size: 24px 24px;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+        }
+
+        /* Pestaña y opción del menú resaltadas según la vista visible (solo CSS, sin JS extra) */
+        body:has(#vista_inicio:not(.ocultar)) .pestana[data-vista="vista_inicio"],
+        body:has(#vista_crear:not(.ocultar)) .pestana[data-vista="vista_crear"],
+        body:has(#vista_convertir:not(.ocultar)) .pestana[data-vista="vista_convertir"],
+        body:has(#vista_minimizar:not(.ocultar)) .pestana[data-vista="vista_minimizar"],
+        body:has(#vista_regex:not(.ocultar)) .pestana[data-vista="vista_regex"] {
+            @apply bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-white;
+        }
+        body:has(#vista_inicio:not(.ocultar)) .item_menu[data-vista="vista_inicio"],
+        body:has(#vista_crear:not(.ocultar)) .item_menu[data-vista="vista_crear"],
+        body:has(#vista_convertir:not(.ocultar)) .item_menu[data-vista="vista_convertir"],
+        body:has(#vista_minimizar:not(.ocultar)) .item_menu[data-vista="vista_minimizar"],
+        body:has(#vista_regex:not(.ocultar)) .item_menu[data-vista="vista_regex"] {
+            @apply bg-brand-blue/10 text-brand-blue dark:bg-brand-blue/20 dark:text-brand-blue-light;
+        }
+
+        /* Insignias que dependen del modo AFN / AFD del constructor (solo CSS):
+           se oculta la del modo que no está activo */
+        #vista_crear:has(#boton_elegir_afn.boton_tipo_activo) .solo_afd,
+        #vista_crear:has(#boton_elegir_afd.boton_tipo_activo) .solo_afn {
+            display: none;
+        }
+
+        /* =====================================================================
+           CLASES QUE USA app.js  (no cambies sus nombres)
+           ===================================================================== */
+
+        /* Mostrar / ocultar: app.js pone y quita esta clase en vistas, cajas y modales */
+        .ocultar { display: none !important; }
+
+        /* Menú lateral: app.js alterna estas dos clases */
+        .menu_cerrado { transform: translateX(-100%); visibility: hidden; }
+        .menu_abierto { transform: translateX(0); visibility: visible; }
+
+        /* Conmutador AFN / AFD: app.js REEMPLAZA el className completo del botón,
+           por eso todo su estilo vive aquí y no en el HTML */
+        .boton_tipo_activo {
+            @apply px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-brand-blue shadow-sm transition
+                   dark:bg-zinc-800 dark:text-brand-blue-light;
+        }
+        .boton_tipo_inactivo {
+            @apply px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 transition
+                   hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white;
+        }
+
+        /* Mensaje del resultado de la simulación: app.js cambia su className.
+           Lleva !important porque app.js también le pone colores en línea mientras espera al servidor. */
+        .caja_mensaje_resultado {
+            @apply p-3.5 rounded-xl border text-xs leading-relaxed;
+            @apply !bg-slate-50 !text-slate-700 !border-slate-200
+                   dark:!bg-zinc-900 dark:!text-zinc-300 dark:!border-zinc-800;
+        }
+        .resultado_aceptado {
+            @apply !bg-emerald-50 !text-emerald-800 !border-emerald-500/30
+                   dark:!bg-emerald-950/30 dark:!text-emerald-300 dark:!border-emerald-500/30;
+        }
+        .resultado_rechazado {
+            @apply !bg-red-50 !text-red-700 !border-red-500/30
+                   dark:!bg-red-950/30 dark:!text-red-300 dark:!border-red-500/30;
+        }
+
+        /* Texto que app.js escribe en las cajas de estados finales cuando están vacías */
+        .texto_ayuda_vacio { @apply text-xs text-slate-400 dark:text-zinc-500; }
+
+        /* Checkboxes de estados finales: app.js crea cada <label> con estilos en línea oscuros;
+           aquí se adaptan al tema claro / oscuro */
+        .lista_finales label {
+            @apply !px-2 !py-0.5 !rounded-md !bg-white border border-slate-200 font-mono text-xs text-slate-700 transition
+                   hover:border-brand-blue dark:!bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200;
+        }
+        .lista_finales label:has(input:checked) {
+            @apply !bg-brand-blue/10 border-brand-blue/30 text-brand-blue dark:!bg-brand-blue/20 dark:text-brand-blue-light;
+        }
+        .lista_finales input[type="checkbox"] { accent-color: #1c72a5; }
+
+        /* Tablas de transiciones: app.js genera las filas y celdas */
+        .tabla_delta th {
+            @apply p-3 text-center font-mono font-semibold text-slate-700 bg-slate-50 border-b border-slate-200
+                   dark:text-zinc-300 dark:bg-zinc-900/90 dark:border-zinc-800;
+        }
+        .tabla_delta td { @apply p-2 border-b border-slate-200 dark:border-zinc-800; }
+        .tabla_delta th + th,
+        .tabla_delta td + td { @apply border-l; }
+        .tabla_delta tbody tr:last-child td { @apply border-b-0; }
+        .tabla_delta tbody tr { @apply transition-colors hover:bg-slate-50/50 dark:hover:bg-zinc-900/40; }
+
+        .celda_estado_origen {
+            @apply w-24 text-center font-mono font-bold whitespace-nowrap text-brand-blue bg-slate-50/60
+                   dark:text-brand-blue-light dark:bg-zinc-900/30;
+        }
+        .input_celda_transicion {
+            @apply w-full min-w-[4.5rem] px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-center font-mono text-xs text-slate-900
+                   placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue
+                   dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-600;
+        }
+
+        /* Botón "← Volver al Inicio" que app.js agrega al principio de cada módulo */
+        .volver_inicio { @apply flex self-start -mb-2; }
+        .boton_ir_inicio {
+            @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-600 shadow-sm transition
+                   hover:bg-slate-50 hover:text-brand-blue
+                   dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white;
+        }
+
+        /* Contenido que app.js genera para el modal de pasos (Tailwind quita los estilos por defecto) */
+        #contenedor_contenido_pasos h3,
+        #contenedor_contenido_pasos h4 { font-weight: 700; }
+        #contenedor_contenido_pasos ul { list-style: disc; }
+    </style>
 </head>
-<body class="cuerpo_pagina">
+<body class="bg-white text-slate-800 dark:bg-oscuro-fondo dark:text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-blue/20 selection:text-brand-blue">
 
-   
-    <header class="barra_superior">
-        
-      
-        <div class="caja_logo_y_titulo">
-            <button id="boton_abrir_menu" class="boton_menu_icono">
-                ☰
-            </button>
-            <span class="insignia_universidad">UMG</span>
-            <span class="texto_titulo_proyecto">Simulador de Autómatas</span>
+    <!-- ===================================================================
+         BARRA SUPERIOR
+         =================================================================== -->
+    <header class="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-oscuro-fondo/90 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
+
+            <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                <!-- app.js: abre el menú lateral -->
+                <button id="boton_abrir_menu" class="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition" aria-label="Abrir menú">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+
+                <button data-vista="vista_inicio" class="flex items-center gap-2.5 min-w-0 text-left">
+                    <span class="block min-w-0">
+                        <span class="flex items-center gap-2">
+                            <span class="text-sm font-semibold tracking-tight text-slate-900 dark:text-white truncate">Simulador de Autómatas</span>
+                        </span>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Navegación de escritorio (data-vista la maneja app.js) -->
+            <nav class="hidden lg:flex shrink-0 items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-medium" aria-label="Módulos">
+                <button data-vista="vista_inicio" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">Inicio</button>
+                <button data-vista="vista_crear" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">Constructor &amp; Simulación</button>
+                <button data-vista="vista_convertir" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">AFN → AFD</button>
+                <button data-vista="vista_minimizar" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">Minimización</button>
+                <button data-vista="vista_regex" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1">
+                    Regex <span class="text-[9px] px-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded">Próx.</span>
+                </button>
+            </nav>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- Cambiar tema claro / oscuro (función alternarTema, en el <head>) -->
+                <button type="button" onclick="alternarTema()" class="p-2 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 transition" title="Cambiar tema (claro / oscuro)" aria-label="Cambiar tema">
+                    <svg class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <svg class="w-4 h-4 block dark:hidden text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </button>
+
+                <!-- app.js: abre el modal de integrantes -->
+                <button id="boton_mostrar_integrantes" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-brand-blue/50 bg-slate-50 dark:bg-zinc-900 text-xs font-medium text-slate-700 dark:text-zinc-200 hover:text-brand-blue dark:hover:text-brand-blue-light transition shadow-sm" aria-label="Ver integrantes">
+                    <svg class="w-4 h-4 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <span class="hidden sm:inline">Equipo</span>
+                </button>
+            </div>
         </div>
-
-    
-        <div class="caja_boton_integrantes">
-            <button id="boton_mostrar_integrantes" class="boton_integrantes">
-                👥 Integrantes
-            </button>
-        </div>
-
     </header>
-    
-    <div id="fondo_oscuro" class="fondo_oscuro_menu ocultar"></div>
 
+    <!-- MENÚ LATERAL (móvil y tablet) -->
+    <!-- app.js: fondo oscuro detrás del menú (usa la clase ocultar) -->
+    <div id="fondo_oscuro" class="ocultar fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"></div>
 
-    <aside id="menu_lateral" class="menu_lateral menu_cerrado">
+    <!-- app.js: menú lateral; se abre y cierra con menu_abierto / menu_cerrado -->
+    <aside id="menu_lateral" class="menu_cerrado fixed inset-y-0 left-0 z-[60] w-72 max-w-[85vw] flex flex-col bg-white dark:bg-oscuro-tarjeta border-r border-slate-200 dark:border-zinc-800 shadow-2xl transition-[transform,visibility] duration-300">
 
-        
-        <div class="cabecera_menu">
-            <span class="texto_menu_titulo">Navegacion</span>
-            <button id="boton_cerrar_menu" class="boton_cerrar">✕</button>
+        <div class="h-16 shrink-0 px-4 flex items-center justify-between border-b border-slate-200 dark:border-zinc-800">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">Navegación</span>
+            <!-- app.js: cierra el menú -->
+            <button id="boton_cerrar_menu" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-zinc-800 transition" aria-label="Cerrar menú">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
         </div>
 
-      
-        <nav class="caja_enlaces_menu">
-            <button class="boton_seccion" data-vista="vista_inicio">🏠 Inicio</button>
+        <nav class="flex-1 overflow-y-auto p-3 flex flex-col gap-1 text-sm">
+            <button data-vista="vista_inicio" class="item_menu flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Inicio
+            </button>
 
-            <div class="separador_menu">MODULO AUTÓMATAS</div>
-            <button class="boton_seccion" data-vista="vista_crear">⚙️ Crear y Simular</button>
-            <button class="boton_seccion" data-vista="vista_convertir">🔄 Conversión AFN a AFD</button>
-            <button class="boton_seccion" data-vista="vista_minimizar">📉 Minimización AFD</button>
+            <p class="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Módulo Autómatas</p>
+            <button data-vista="vista_crear" class="item_menu flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition">
+                <svg class="w-4 h-4 shrink-0 text-brand-blue dark:text-brand-blue-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                Constructor &amp; Simulación
+            </button>
+            <button data-vista="vista_convertir" class="item_menu flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition">
+                <svg class="w-4 h-4 shrink-0 text-brand-gold dark:text-brand-gold-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Conversión AFN a AFD
+            </button>
+            <button data-vista="vista_minimizar" class="item_menu flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition">
+                <svg class="w-4 h-4 shrink-0 text-brand-red dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+                Minimización de AFD
+            </button>
 
-            <div class="separador_menu">MODULO EXPRESIONES REGULARES</div>
-            <button class="boton_seccion" data-vista="vista_regex">🔤 Expresiones Regulares</button>
+            <p class="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Módulo Expresiones Regulares</p>
+            <button data-vista="vista_regex" class="item_menu flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition">
+                <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+                Expresiones Regulares
+                <span class="ml-auto text-[9px] px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded">Próx.</span>
+            </button>
         </nav>
 
-       
-        <div class="pie_menu">
-            <span>© 2026 Simulador de Autómatas. Todos los derechos reservados.</span>
+        <div class="shrink-0 p-4 border-t border-slate-200 dark:border-zinc-800 text-center text-[11px] text-slate-400 dark:text-zinc-500">
+            © 2026 Simulador de Autómatas. Todos los derechos reservados.
         </div>
-
     </aside>
-   
-    <main class="caja_contenido_principal">
-        <section id="vista_inicio" class="seccion_vista">
 
-            
-            <div class="caja_banner_inicio">
-                <span class="insignia_fase">..</span>
-                <h2 class="titulo_banner">Simulador de Automatas Finitos</h2>
-                <p class="descripcion_banner">Crea, simula cadenas paso a paso, convierte de AFN a AFD y minimiza estados equivalentes.</p>
-            </div>
+    <!-- ===================================================================
+         CONTENIDO PRINCIPAL
+         =================================================================== -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            
-            
-            <div class="caja_tarjetas_grid">
+        <!-- ==================== VISTA 1: INICIO ==================== -->
+        <section id="vista_inicio" class="seccion_vista flex flex-col gap-8">
 
-              
-                <div class="tarjeta_inicio" data-vista="vista_crear">
-                    <div class="icono_tarjeta">⚙️</div>
-                    <h3 class="titulo_tarjeta">Crear y Simular</h3>
-                    <p class="texto_tarjeta">Define autómatas manualmente con matriz interactiva, genera el grafo y prueba cadenas en vivo.</p>
-                    <span class="enlace_tarjeta">Comenzar diseño →</span>
-                </div>
+            <!-- Banner -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-[#111114] dark:via-oscuro-fondo dark:to-[#16161a] border border-slate-200/80 dark:border-zinc-800/80 p-8 sm:p-10 shadow-sm">
+                <div class="absolute -right-12 -top-12 w-64 h-64 bg-brand-blue/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute right-32 -bottom-16 w-48 h-48 bg-brand-gold/10 rounded-full blur-2xl pointer-events-none"></div>
 
-             
-                <div class="tarjeta_inicio" data-vista="vista_convertir">
-                    <div class="icono_tarjeta">🔄</div>
-                    <h3 class="titulo_tarjeta">Conversión AFN a AFD</h3>
-                    <p class="texto_tarjeta">Transforma autómatas con no determinismo o saltos vacíos (ε) aplicando construcción de subconjuntos.</p>
-                    <span class="enlace_tarjeta">Ir a conversión →</span>
-                </div>
-
-           
-                <div class="tarjeta_inicio" data-vista="vista_minimizar">
-                    <div class="icono_tarjeta">📉</div>
-                    <h3 class="titulo_tarjeta">Minimización de AFD</h3>
-                    <p class="texto_tarjeta">Optimiza autómatas deterministas eliminando estados inaccesibles y unificando estados equivalentes.</p>
-                    <span class="enlace_tarjeta">Ir a minimización →</span>
-                </div>
-
-               
-                <div class="tarjeta_inicio tarjeta_en_espera" data-vista="vista_regex">
-                    <div class="icono_tarjeta">🔤</div>
-                    <div class="cabecera_tarjeta_espera">
-                        <h3 class="titulo_tarjeta">Expresiones Regulares</h3>
-                        <span class="insignia_proxima">lUEGO :)</span>
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-blue/10 dark:bg-brand-blue/20 border border-brand-blue/20 text-brand-blue dark:text-brand-blue-light text-xs font-semibold tracking-wide">
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-blue animate-pulse"></span>
+                        Proyecto Final • UMG 2026
                     </div>
-                    <p class="texto_tarjeta">Conversión de expresiones regulares a autómatas y validación de archivos logs.</p>
-                    <span class="enlace_tarjeta enlace_espera">EN OTRO MOMENTO.. :)</span>
+                    <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        Simulador de <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-[#2aa6f2]">Autómatas Finitos</span>
+                    </h1>
+                    <p class="text-sm sm:text-base text-slate-600 dark:text-zinc-400 leading-relaxed">
+                        Plataforma visual interactiva para diseñar grafos de autómatas deterministas y no deterministas, simular cadenas con trazado dinámico, convertir AFN a AFD y minimizar estados equivalentes.
+                    </p>
                 </div>
-
-              
-                <div id="tarjeta_abrir_integrantes" class="tarjeta_inicio">
-                    <div class="icono_tarjeta">👥</div>
-                    <h3 class="titulo_tarjeta">Equipo de Desarrollo</h3>
-                    <p class="texto_tarjeta">Nombres de los integrantes, carnés y asignación de roles del proyecto.</p>
-                    <span class="enlace_tarjeta">Ver integrantes →</span>
-                </div>
-
             </div>
 
+            <!-- Módulos -->
+            <div>
+                <div class="flex items-center justify-between gap-4 mb-4">
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-white">Módulos de Trabajo</h2>
+                    <span class="text-xs text-slate-500 dark:text-zinc-500">Selecciona un algoritmo o herramienta</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                    <!-- Constructor y simulación -->
+                    <div data-vista="vista_crear" class="group rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 hover:border-brand-blue/60 hover:shadow-lg dark:hover:border-brand-blue/50 transition-all cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-xl bg-brand-blue/10 text-brand-blue dark:bg-brand-blue/20 dark:text-brand-blue-light flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <h3 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-brand-blue transition">Constructor &amp; Simulación</h3>
+                                <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">AFN / AFD</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed mb-4">
+                                Define la quíntupla formal, genera la matriz interactiva de transiciones (δ) y simula cadenas evaluando aceptación o rechazo.
+                            </p>
+                        </div>
+                        <div class="flex items-center text-xs font-semibold text-brand-blue dark:text-brand-blue-light group-hover:translate-x-1 transition-transform">Diseñar autómata &rarr;</div>
+                    </div>
+
+                    <!-- Conversión AFN a AFD -->
+                    <div data-vista="vista_convertir" class="group rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 hover:border-brand-gold/60 hover:shadow-lg dark:hover:border-brand-gold/50 transition-all cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/20 dark:text-brand-gold-light flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <h3 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-brand-gold transition">Conversión AFN a AFD</h3>
+                                <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold dark:text-brand-gold-light font-medium">Subconjuntos</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed mb-4">
+                                Transforma autómatas no deterministas o con transiciones épsilon (ε) mediante el algoritmo formal de construcción de subconjuntos.
+                            </p>
+                        </div>
+                        <div class="flex items-center text-xs font-semibold text-brand-gold dark:text-brand-gold-light group-hover:translate-x-1 transition-transform">Iniciar conversión &rarr;</div>
+                    </div>
+
+                    <!-- Minimización de AFD -->
+                    <div data-vista="vista_minimizar" class="group rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 hover:border-brand-red/60 hover:shadow-lg dark:hover:border-brand-red/50 transition-all cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-xl bg-brand-red/10 text-brand-red dark:bg-brand-red/20 dark:text-red-400 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <h3 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-brand-red transition">Minimización de AFD</h3>
+                                <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-brand-red/15 text-brand-red dark:text-red-400 font-medium">Particiones K</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed mb-4">
+                                Reduce la complejidad eliminando estados inalcanzables y fusionando estados equivalentes bajo clases de indistinguibilidad.
+                            </p>
+                        </div>
+                        <div class="flex items-center text-xs font-semibold text-brand-red dark:text-red-400 group-hover:translate-x-1 transition-transform">Minimizar autómata &rarr;</div>
+                    </div>
+
+                    <!-- Expresiones regulares (próxima entrega) -->
+                    <div data-vista="vista_regex" class="rounded-2xl bg-slate-50/70 dark:bg-oscuro-tarjeta/50 border border-dashed border-slate-300 dark:border-zinc-800 p-6 hover:border-amber-400/60 transition cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <h3 class="text-base font-semibold text-slate-800 dark:text-zinc-200">Expresiones Regulares</h3>
+                                <span class="shrink-0 text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 font-medium">Entrega II</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-zinc-500 leading-relaxed mb-4">
+                                Conversión de Regex a Thompson / AFD sintáctico y procesador de archivos log con patrones personalizados.
+                            </p>
+                        </div>
+                        <div class="text-xs font-medium text-amber-600 dark:text-amber-400">Ver detalles &rarr;</div>
+                    </div>
+
+                    <!-- Equipo (app.js abre el modal con este id) -->
+                    <div id="tarjeta_abrir_integrantes" class="group rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 hover:border-slate-400 dark:hover:border-zinc-600 transition cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                            </div>
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1.5">Equipo de Desarrollo</h3>
+                            <p class="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed mb-4">
+                                4 integrantes de Ingeniería en Sistemas: Frontend, Algoritmos, Motor de Simulación y Visualización.
+                            </p>
+                        </div>
+                        <div class="flex items-center text-xs font-semibold text-slate-700 dark:text-zinc-300 group-hover:text-brand-blue transition">Consultar fichas y carnés &rarr;</div>
+                    </div>
+
+                </div>
+            </div>
         </section>
-     
-        <section id="vista_crear" class="seccion_vista ocultar">
-            <div class="barra_subcabecera_crear">
-                <h2 class="titulo_vista">⚙️ Constructor de Autómata</h2>
-                <div class="caja_conmutador_tipo">
-                    <button id="boton_elegir_afn" class="boton_tipo_activo">AFN</button>
-                    <button id="boton_elegir_afd" class="boton_tipo_inactivo">AFD</button>
+
+        <!-- ==================== VISTA 2: CONSTRUCTOR Y SIMULACIÓN ==================== -->
+        <section id="vista_crear" class="seccion_vista ocultar flex flex-col gap-6">
+            <!-- app.js inserta aquí el botón "← Volver al Inicio" -->
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-800">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Constructor de Autómata</span>
+                        <span class="solo_afn text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue dark:bg-brand-blue/20 dark:text-brand-blue-light">AFN</span>
+                        <span class="solo_afd text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">AFD</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400">Ingresa la definición formal y genera la matriz de transiciones</p>
+                </div>
+
+                <!-- Conmutador AFN / AFD: app.js reemplaza el className de estos botones,
+                     por eso solo llevan boton_tipo_activo / boton_tipo_inactivo -->
+                <div class="inline-flex self-start sm:self-auto p-1 bg-slate-100 dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <button id="boton_elegir_afn" class="boton_tipo_activo">AFN (No Determinista)</button>
+                    <button id="boton_elegir_afd" class="boton_tipo_inactivo">AFD (Determinista)</button>
                 </div>
             </div>
 
-            
-            <p id="texto_descripcion_modo" class="texto_descripcion_modo">
-                Modo AFN: Permite transiciones vacías (ε) y múltiples estados destino separados por comas.
-            </p>
-            
-            <div class="caja_formulario_automata">
-
-                <div class="fila_dos_columnas">
-                   
-                    <div class="campo_formulario">
-                        <label class="etiqueta_campo">Estados (Q) - separados por coma:</label>
-                        <input type="text" id="campo_estados" class="caja_texto_input" placeholder="ej. q0, q1, q2">
-                    </div>
-
-                  
-                    <div class="campo_formulario">
-                        <label class="etiqueta_campo">Alfabeto (Σ) - símbolos por coma:</label>
-                        <input type="text" id="campo_alfabeto" class="caja_texto_input" placeholder="ej. 0, 1  o  a, b">
-                    </div>
+            <!-- Paso 1: definición formal -->
+            <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-6 h-6 shrink-0 rounded-lg bg-brand-blue/10 text-brand-blue dark:text-brand-blue-light flex items-center justify-center text-xs font-mono font-bold">1</span>
+                        Definición de la Quíntupla (Q, Σ, δ, q₀, F)
+                    </h3>
+                    <!-- app.js cambia este texto según el modo AFN / AFD -->
+                    <p id="texto_descripcion_modo" class="text-xs text-slate-500 dark:text-zinc-400">
+                        Modo AFN: Permite transiciones vacías (ε) y múltiples estados destino separados por comas.
+                    </p>
                 </div>
 
-                <div class="fila_dos_columnas">
-                    
-                    <div class="campo_formulario">
-                        <label class="etiqueta_campo">Estado Inicial (q0):</label>
-                        <select id="selector_estado_inicial" class="selector_opciones">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label for="campo_estados" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                            Conjunto de Estados (Q) <span class="text-slate-400 font-normal">separados por coma</span>
+                        </label>
+                        <input type="text" id="campo_estados" class="caja_texto_input w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition" placeholder="ej. q0, q1, q2">
+                        <p class="text-[11px] text-slate-500 dark:text-zinc-500">Ejemplo común: q0, q1, q2 o A, B, C</p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="campo_alfabeto" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                            Alfabeto de Entrada (Σ) <span class="text-slate-400 font-normal">símbolos por coma</span>
+                        </label>
+                        <input type="text" id="campo_alfabeto" class="caja_texto_input w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition" placeholder="ej. 0, 1  o  a, b">
+                        <p class="text-[11px] text-slate-500 dark:text-zinc-500">No incluyas ε aquí, se agrega automáticamente en modo AFN.</p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="selector_estado_inicial" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estado Inicial (q₀)</label>
+                        <select id="selector_estado_inicial" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition cursor-pointer">
                             <option value="">-- Ingresa primero los estados --</option>
                         </select>
                     </div>
 
-                
-                    <div class="campo_formulario">
-                        <label class="etiqueta_campo">Estados Finales (F):</label>
-                        <div id="caja_estados_finales" class="contenedor_checkboxes_finales">
+                    <div class="space-y-1.5">
+                        <span class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estados de Aceptación (F)</span>
+                        <!-- app.js llena esta caja con un checkbox por estado -->
+                        <div id="caja_estados_finales" class="lista_finales min-h-[42px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 flex flex-wrap items-center gap-2">
                             <span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="alinear_derecha">
-                    <button class="limpiar-campos">
+                <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-2">
+                    <!-- app.js: limpiar-campos borra todos los campos -->
+                    <button class="limpiar-campos w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 text-xs font-medium transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Limpiar Campos
                     </button>
-                    <button id="boton_generar_tabla" class="boton_secundario">
-                         Generar Tabla de Transiciones
-                    </button>
-                </div>
-
-            </div>
-
-            
-            <div id="caja_seccion_matriz" class="caja_formulario_automata ocultar">
-                <div class="cabecera_tabla_matriz">
-                    <h3 class="subtitulo_tabla">Tabla de Transiciones (δ)</h3>
-                    <span id="texto_ayuda_matriz" class="texto_ayuda_tabla">En AFN separa destinos con comas (ej. q0, q1) o usa ε</span>
-                </div>
-
-                <div class="tabla_desplazable">
-                    <table id="tabla_matriz_transiciones" class="tabla_transiciones"></table>
-                </div>
-
-                <div class="alinear_derecha">
-                    <button id="boton_guardar_automata" class="boton_primario">
-                        Generar Automata
+                    <button id="boton_generar_tabla" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Generar Tabla de Transiciones (δ)
                     </button>
                 </div>
             </div>
 
-           
-            <div id="caja_resultado_crear" class="caja_formulario_automata ocultar">
-
-                <div class="cabecera_resultado_grafo">
-                    <h3 class="subtitulo_tabla">Representación Gráfica</h3>
-                    <span id="insignia_estado_automata" class="insignia_tipo_creado">AFN Activo</span>
+            <!-- Paso 2: matriz de transiciones (app.js la muestra al generar la tabla) -->
+            <div id="caja_seccion_matriz" class="ocultar rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span class="w-6 h-6 shrink-0 rounded-lg bg-brand-gold/15 text-brand-gold flex items-center justify-center text-xs font-mono font-bold">2</span>
+                            Matriz de Transición (δ)
+                        </h3>
+                        <!-- app.js cambia este texto según el modo AFN / AFD -->
+                        <p id="texto_ayuda_matriz" class="text-xs text-slate-500 dark:text-zinc-400 mt-1">En AFN separa destinos con comas (ej. q0, q1) o usa ε</p>
+                    </div>
+                    <span class="solo_afn self-start sm:self-auto text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">δ: Q × (Σ ∪ {ε}) → P(Q)</span>
+                    <span class="solo_afd self-start sm:self-auto text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">δ: Q × Σ → Q</span>
                 </div>
 
-                <div id="lienzo_grafo_crear" class="lienzo_grafo"></div>
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <!-- app.js genera las filas de esta tabla -->
+                    <table id="tabla_matriz_transiciones" class="tabla_delta w-full text-left text-xs"></table>
+                </div>
 
-               
-                <div class="caja_probar_cadena">
-                    <label class="etiqueta_campo">Probar cadena de entrada:</label>
-                    
-                    <div class="fila_entrada_simulacion">
-                        <input type="text" id="campo_cadena_simular" class="caja_texto_input flex_input" placeholder="Ingresa la cadena a evaluar (ej. 0101)">
-                        <button id="boton_simular_cadena" class="boton_exito">▶ Simular</button>
+                <div class="flex justify-end pt-1">
+                    <button id="boton_guardar_automata" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Generar Autómata y Dibujar Grafo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pasos 3 y 4: grafo y simulación (app.js los muestra al generar el autómata) -->
+            <div id="caja_resultado_crear" class="ocultar scroll-mt-20 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Grafo -->
+                <div class="lg:col-span-2 rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span class="w-6 h-6 shrink-0 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">3</span>
+                            Representación Gráfica
+                        </h3>
+                        <!-- app.js escribe aquí "AFN Activo" o "AFD Activo" -->
+                        <span id="insignia_estado_automata" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue dark:bg-brand-blue/20 dark:text-brand-blue-light">AFN Activo</span>
                     </div>
 
-                    
+                    <!-- grafo.js dibuja aquí con Vis-Network (borra todo lo que haya dentro) -->
+                    <div id="lienzo_grafo_crear" class="canvas-grid relative w-full h-[420px] rounded-xl border border-slate-800 bg-slate-900 overflow-hidden"></div>
+
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-slate-500 dark:text-zinc-500">
+                        <span class="flex items-center gap-1"><span class="font-mono font-bold text-slate-700 dark:text-zinc-300">→</span> Estado inicial</span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full border-2 border-[#22c55e]"></span> Estado final</span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#facc15]"></span> Recorrido de la cadena</span>
+                        <span class="ml-auto font-mono">Zoom &amp; arrastre</span>
+                    </div>
+                </div>
+
+                <!-- Simulación -->
+                <div class="lg:self-start rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm flex flex-col gap-4">
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <span class="w-6 h-6 shrink-0 rounded-lg bg-brand-red/15 text-brand-red flex items-center justify-center text-xs font-mono font-bold">4</span>
+                                Motor de Simulación
+                            </h3>
+                            <!-- <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">En vivo</span> -->
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-zinc-400">Prueba si una cadena pertenece al lenguaje L(M). El recorrido se anima en el grafo.</p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="campo_cadena_simular" class="block text-xs font-medium text-slate-700 dark:text-zinc-300">Cadena de entrada (w):</label>
+                        <input type="text" id="campo_cadena_simular" class="caja_texto_input w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition" placeholder="Ingresa la cadena a evaluar (ej. 0101)">
+                    </div>
+
+                    <button id="boton_simular_cadena" class="w-full px-3 py-2.5 rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Simular cadena
+                    </button>
+
+                    <!-- app.js muestra aquí si la cadena fue aceptada o rechazada -->
                     <div id="caja_resultado_simulacion" class="caja_mensaje_resultado ocultar"></div>
                 </div>
-
             </div>
-
         </section>
 
-  
-   
-        <section id="vista_convertir" class="seccion_vista ocultar">
-            <h2 class="titulo_vista">🔄 Conversión de AFN a AFD</h2>
-            <p class="texto_ayuda_vacio" style="margin-bottom: 16px;">
-                Ingresa tu autómata no determinista (con o sin saltos vacíos ε). Se aplicará el algoritmo de construcción de subconjuntos.
-            </p>
+        <!-- ==================== VISTA 3: CONVERSIÓN AFN A AFD ==================== -->
+        <section id="vista_convertir" class="seccion_vista ocultar flex flex-col gap-6">
+            <!-- app.js inserta aquí el botón "← Volver al Inicio" -->
 
-          
-            <div class="tarjeta_formulario">
-                <div class="fila_dos_columnas">
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Estados (Q) separados por comas:</label>
-                        <input type="text" id="campo_estados_convertir" class="campo_texto" placeholder="ej. q0, q1, q2">
-                    </div>
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Alfabeto (Σ) separado por comas:</label>
-                        <input type="text" id="campo_alfabeto_convertir" class="campo_texto" placeholder="ej. 0, 1">
-                    </div>
+            <div class="pb-4 border-b border-slate-200 dark:border-zinc-800">
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Conversión AFN a AFD</h2>
+                <p class="text-xs text-slate-500 dark:text-zinc-400">Algoritmo de Construcción de Subconjuntos y Cerraduras Épsilon (ε-clausura)</p>
+            </div>
+
+            <!-- Paso 1: AFN de entrada -->
+            <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-6">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2">
+                            <span class="w-6 h-6 shrink-0 rounded-lg bg-brand-gold/15 text-brand-gold flex items-center justify-center text-xs font-mono font-bold">1</span>
+                            Autómata No Determinista de Entrada (AFN)
+                        </span>
+                        <span class="shrink-0 text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">Entrada</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400">Ingresa tu autómata no determinista (con o sin saltos vacíos ε). Se aplicará el algoritmo de construcción de subconjuntos.</p>
                 </div>
 
-                <div class="fila_dos_columnas" style="margin-top: 14px;">
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Estado Inicial (q0):</label>
-                        <select id="selector_inicial_convertir" class="campo_texto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label for="campo_estados_convertir" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estados (Q) <span class="text-slate-400 font-normal">separados por comas</span></label>
+                        <input type="text" id="campo_estados_convertir" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition" placeholder="ej. q0, q1, q2">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="campo_alfabeto_convertir" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Alfabeto (Σ) <span class="text-slate-400 font-normal">separado por comas</span></label>
+                        <input type="text" id="campo_alfabeto_convertir" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition" placeholder="ej. 0, 1">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="selector_inicial_convertir" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estado Inicial (q₀)</label>
+                        <select id="selector_inicial_convertir" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition cursor-pointer">
                             <option value="">-- Ingresa primero los estados --</option>
                         </select>
                     </div>
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Estados de Aceptación (F):</label>
-                        <div id="caja_finales_convertir" class="caja_checkboxes_finales">
+                    <div class="space-y-1.5">
+                        <span class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estados de Aceptación (F)</span>
+                        <div id="caja_finales_convertir" class="lista_finales min-h-[42px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 flex flex-wrap items-center gap-2">
                             <span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="alinear_derecha">
-                    <button class="limpiar-campos">
+                <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-2">
+                    <button class="limpiar-campos w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 text-xs font-medium transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Limpiar Campos
                     </button>
-                    <button id="boton_generar_tabla_convertir" class="boton_accion_secundario" style="margin-top: 10px;">
+                    <button id="boton_generar_tabla_convertir" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-gold hover:bg-brand-gold-hover text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         Generar Matriz de Transiciones (AFN)
                     </button>
                 </div>
             </div>
 
-         
-            <div id="caja_matriz_convertir" class="tarjeta_formulario ocultar" style="margin-top: 16px;">
-                <h3 class="subtitulo_tarjeta">Matriz de Transiciones AFN</h3>
-                <p class="texto_descripcion_modo">Separa destinos con comas (ej. q0, q1) o deja vacío si no hay transición.</p>
-                <div class="caja_tabla_scroll">
-                    <table id="tabla_matriz_convertir" class="tabla_matriz"></table>
+            <!-- Paso 2: matriz del AFN (app.js la muestra al generar la matriz) -->
+            <div id="caja_matriz_convertir" class="ocultar rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-6 h-6 shrink-0 rounded-lg bg-brand-gold/15 text-brand-gold flex items-center justify-center text-xs font-mono font-bold">2</span>
+                        Matriz de Transiciones AFN
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400 mt-1">Separa destinos con comas (ej. q0, q1) o deja vacío si no hay transición.</p>
                 </div>
-                <button id="boton_ejecutar_conversion" class="boton_accion_primario" style="margin-top: 16px; width: 100%;">
-                     Convertir a AFD y Dibujar Grafo
-                </button>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <table id="tabla_matriz_convertir" class="tabla_delta w-full text-left text-xs"></table>
+                </div>
+
+                <!-- app.js cambia el texto de este botón mientras convierte -->
+                <button id="boton_ejecutar_conversion" class="w-full py-2.5 rounded-xl bg-brand-gold hover:bg-brand-gold-hover disabled:opacity-60 disabled:cursor-wait text-white text-xs font-semibold shadow-sm transition">⚡ Convertir a AFD y Dibujar Grafo</button>
             </div>
 
-         
-            <div id="caja_resultado_conversion" class="tarjeta_formulario ocultar" style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h3 class="subtitulo_tarjeta" style="color: #4ade80;">AFD Resultante (Determinista)</h3>
-                    <button id="boton_ver_pasos_conversion" class="boton_accion_secundario" style="padding: 6px 12px; font-size: 12px;">
-                        📋 Ver Pasos de Subconjuntos
+            <!-- Paso 3: AFD resultante (app.js lo muestra al terminar la conversión) -->
+            <div id="caja_resultado_conversion" class="ocultar scroll-mt-20 rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-6 h-6 shrink-0 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">3</span>
+                        AFD Determinista Resultante
+                    </h3>
+                    <button id="boton_ver_pasos_conversion" class="self-start sm:self-auto px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-xs font-medium text-brand-blue dark:text-brand-blue-light transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        Ver Pasos de Subconjuntos
                     </button>
                 </div>
-                <div id="lienzo_grafo_conversion" class="contenedor_lienzo_grafo"></div>
+                <!-- grafo.js dibuja aquí -->
+                <div id="lienzo_grafo_conversion" class="canvas-grid relative w-full h-[400px] rounded-xl border border-slate-800 bg-slate-900 overflow-hidden"></div>
             </div>
         </section>
 
+        <!-- ==================== VISTA 4: MINIMIZACIÓN DE AFD ==================== -->
+        <section id="vista_minimizar" class="seccion_vista ocultar flex flex-col gap-6">
+            <!-- app.js inserta aquí el botón "← Volver al Inicio" -->
 
-        <section id="vista_minimizar" class="seccion_vista ocultar">
-            <h2 class="titulo_vista">📉 Minimización de AFD</h2>
-            <p class="texto_ayuda_vacio" style="margin-bottom: 16px;">
-                Ingresa tu autómata determinista. Se agruparán los estados equivalentes en clases de equivalencia (particiones k).
-            </p>
+            <div class="pb-4 border-b border-slate-200 dark:border-zinc-800">
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Minimización de AFD</h2>
+                <p class="text-xs text-slate-500 dark:text-zinc-400">Eliminación de estados inaccesibles y partición por clases de equivalencia (Hopcroft)</p>
+            </div>
 
-           
-            <div class="tarjeta_formulario">
-                <div class="fila_dos_columnas">
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Estados (Q) separados por comas:</label>
-                        <input type="text" id="campo_estados_minimizar" class="campo_texto" placeholder="ej. A, B, C, D">
-                    </div>
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Alfabeto (Σ) separado por comas:</label>
-                        <input type="text" id="campo_alfabeto_minimizar" class="campo_texto" placeholder="ej. 0, 1">
-                    </div>
+            <!-- Paso 1: AFD de entrada -->
+            <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-6">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2">
+                            <span class="w-6 h-6 shrink-0 rounded-lg bg-brand-red/15 text-brand-red flex items-center justify-center text-xs font-mono font-bold">1</span>
+                            Autómata Determinista de Entrada (AFD)
+                        </span>
+                        <span class="shrink-0 text-[10px] px-2 py-0.5 rounded bg-brand-red/10 text-brand-red dark:text-red-400 font-medium">Entrada</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400">Ingresa tu autómata determinista. Se agruparán los estados equivalentes en clases de equivalencia (particiones k).</p>
                 </div>
 
-                <div class="fila_dos_columnas" style="margin-top: 14px;">
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Estado Inicial (q0):</label>
-                        <select id="selector_inicial_minimizar" class="campo_texto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label for="campo_estados_minimizar" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estados (Q) <span class="text-slate-400 font-normal">separados por comas</span></label>
+                        <input type="text" id="campo_estados_minimizar" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition" placeholder="ej. A, B, C, D">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="campo_alfabeto_minimizar" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Alfabeto (Σ) <span class="text-slate-400 font-normal">separado por comas</span></label>
+                        <input type="text" id="campo_alfabeto_minimizar" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition" placeholder="ej. 0, 1">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="selector_inicial_minimizar" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estado Inicial (q₀)</label>
+                        <select id="selector_inicial_minimizar" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition cursor-pointer">
                             <option value="">-- Ingresa primero los estados --</option>
                         </select>
                     </div>
-                    <div class="grupo_campo">
-                        <label class="etiqueta_campo">Estados de Aceptación (F):</label>
-                        <div id="caja_finales_minimizar" class="caja_checkboxes_finales">
+                    <div class="space-y-1.5">
+                        <span class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Estados de Aceptación (F)</span>
+                        <div id="caja_finales_minimizar" class="lista_finales min-h-[42px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 flex flex-wrap items-center gap-2">
                             <span class="texto_ayuda_vacio">(Escribe los estados arriba)</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="alinear_derecha">
-                    <button class="limpiar-campos">
+                <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-2">
+                    <button class="limpiar-campos w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 text-xs font-medium transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Limpiar Campos
                     </button>
-                    <button id="boton_generar_tabla_minimizar" class="boton_accion_secundario" style="margin-top: 10px;">
+                    <button id="boton_generar_tabla_minimizar" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-hover text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         Generar Matriz de Transiciones (AFD)
                     </button>
                 </div>
             </div>
 
-            <div id="caja_matriz_minimizar" class="tarjeta_formulario ocultar" style="margin-top: 16px;">
-                <h3 class="subtitulo_tarjeta">Matriz de Transiciones AFD</h3>
-                <p class="texto_descripcion_modo">Por ser AFD, ingresa únicamente un solo estado destino por casilla.</p>
-                <div class="caja_tabla_scroll">
-                    <table id="tabla_matriz_minimizar" class="tabla_matriz"></table>
+            <!-- Paso 2: matriz del AFD -->
+            <div id="caja_matriz_minimizar" class="ocultar rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-6 h-6 shrink-0 rounded-lg bg-brand-red/15 text-brand-red flex items-center justify-center text-xs font-mono font-bold">2</span>
+                        Matriz de Transiciones AFD
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400 mt-1">Por ser AFD, ingresa únicamente un solo estado destino por casilla.</p>
                 </div>
-                <button id="boton_ejecutar_minimizar" class="boton_accion_primario" style="margin-top: 16px; width: 100%;">
-                     Minimizar AFD y Dibujar Grafo
-                </button>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <table id="tabla_matriz_minimizar" class="tabla_delta w-full text-left text-xs"></table>
+                </div>
+
+                <!-- app.js cambia el texto de este botón mientras minimiza -->
+                <button id="boton_ejecutar_minimizar" class="w-full py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-hover disabled:opacity-60 disabled:cursor-wait text-white text-xs font-semibold shadow-sm transition">⚡ Minimizar AFD y Dibujar Grafo</button>
             </div>
 
-           
-            <div id="caja_resultado_minimizar" class="tarjeta_formulario ocultar" style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h3 class="subtitulo_tarjeta" style="color: #60a5fa;">AFD Minimizado Resultante</h3>
-                    <button id="boton_ver_pasos_minimizar" class="boton_accion_secundario" style="padding: 6px 12px; font-size: 12px;">
-                        📋 Ver Particiones del Algoritmo
+            <!-- Paso 3: AFD minimizado -->
+            <div id="caja_resultado_minimizar" class="ocultar scroll-mt-20 rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-6 h-6 shrink-0 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">3</span>
+                        AFD Minimizado Resultante
+                    </h3>
+                    <button id="boton_ver_pasos_minimizar" class="self-start sm:self-auto px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-xs font-medium text-brand-blue dark:text-brand-blue-light transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        Ver Particiones del Algoritmo
                     </button>
                 </div>
-                <div id="lienzo_grafo_minimizar" class="contenedor_lienzo_grafo"></div>
+                <!-- grafo.js dibuja aquí -->
+                <div id="lienzo_grafo_minimizar" class="canvas-grid relative w-full h-[400px] rounded-xl border border-slate-800 bg-slate-900 overflow-hidden"></div>
             </div>
         </section>
 
-        <!-- VISTA DE EXPRESIONES REGULARES LUEGO SE TERMINARA -->
+        <!-- ==================== VISTA 5: EXPRESIONES REGULARES (próxima entrega) ==================== -->
         <section id="vista_regex" class="seccion_vista ocultar">
-            <div class="caja_modulo_espera">
-                <div class="icono_espera">🚧</div>
-                <h2 class="titulo_vista">Módulo en Desarrollo</h2>
-                <p class="texto_explicacion_algoritmo">
-                    Procesar expresiones regulares y la validación de archivos de logs estará disponible LUEGO </strong>.
+            <div class="max-w-xl mx-auto py-12 text-center space-y-4">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Módulo de Expresiones Regulares</h2>
+                <p class="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
+                    Este módulo está programado para la <b>Entrega II</b>. Incluirá el analizador léxico, la conversión de Regex a AFN mediante Thompson y el procesador de archivos .log de auditoría.
                 </p>
-                <div class="alinear_centro">
-                    <button class="boton_secundario boton_ir_inicio" data-vista="vista_inicio">
-                        ← Volver al Inicio
-                    </button>
+                <div class="pt-2">
+                    <button class="boton_ir_inicio" data-vista="vista_inicio">&larr; Volver al Inicio</button>
                 </div>
             </div>
         </section>
 
     </main>
 
-  
-    <div id="modal_integrantes" class="caja_modal_fondo ocultar">
-        <div class="caja_modal_dialogo">
-            
-            <div class="cabecera_modal">
-                <h3 class="titulo_modal">👥 Equipo de Desarrollo</h3>
-                <button id="boton_cerrar_modal_integrantes" class="boton_cerrar">✕</button>
+    <!-- ===================================================================
+         PIE DE PÁGINA
+         =================================================================== -->
+    <footer class="border-t border-slate-200 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-oscuro-fondo py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-zinc-500">
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <span class="font-semibold text-slate-700 dark:text-zinc-300">Universidad Mariano Gálvez de Guatemala</span>
+                <span>•</span>
+                <span>Ingeniería en Sistemas 2026</span>
             </div>
+            <span>Motor FastAPI · Grafos con Vis-Network</span>
+        </div>
+    </footer>
 
-            <div class="cuerpo_modal">
-                <div class="tarjeta_integrante">
-                    <p class="nombre_integrante">Fernando José Batz Marroquín</p>
-                    <p class="nombre_carnet">Carné: 0903-23-463</p>
-                    <p class="rol_integrante">Frontend: hizo la interfaz, los formularios, las validaciones y el generador dinámico de la matriz de transiciones </p>
-                </div>
-                <div class="tarjeta_integrante">
-                    <p class="nombre_integrante">Norberto Pedro Chún González</p>
-                    <p class="nombre_carnet">Carné: 0903-24-5288</p>
-                    <p class="rol_integrante">Visualización: integró Vis-Network, el dibujo de los grafos y la animación del recorrido de las cadenas.</p>
-                </div>
-                <div class="tarjeta_integrante">
-                    <p class="nombre_integrante">Darwin Danilo Castro Garcia</p>
-                    <p class="nombre_carnet">Carné: 0903-20-6780</p>
-                    <p class="rol_integrante">Backend: armó el servidor en FastAPI, el modelo del autómata y el motor de simulación de cadenas.</p>
-                </div>
-                <div class="tarjeta_integrante">
-                    <p class="nombre_integrante">Froilan Aldair Ardeano Miranda. </p>
-                    <p class="nombre_carnet">Carné: 0903-23-3982</p>
-                    <p class="rol_integrante">Algoritmos: programó la conversión de AFN a AFD (construcción de subconjuntos) y la minimización de AFD</p>
-                </div>
-                
-            </div>
+    <!-- ===================================================================
+         MODAL DE INTEGRANTES  (app.js lo abre y cierra con la clase ocultar)
+         =================================================================== -->
+    <div id="modal_integrantes" class="ocultar fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-oscuro-tarjeta shadow-2xl animate-aparecer motion-reduce:animate-none">
 
-            <div class="pie_modal">
-                <button id="boton_cerrar_modal_integrantes_pie" class="boton_secundario ancho_total">
-                    Cerrar
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 shrink-0 rounded-lg bg-brand-blue/10 text-brand-blue flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Equipo de Desarrollo</h3>
+                        <p class="text-[11px] text-slate-500">Proyecto Final • Simulador de Autómatas</p>
+                    </div>
+                </div>
+                <button id="boton_cerrar_modal_integrantes" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-zinc-800 transition" aria-label="Cerrar">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
+            <div class="p-6 space-y-3 overflow-y-auto">
+                <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">Fernando José Batz Marroquín</h4>
+                        <p class="text-[11px] font-mono text-brand-blue dark:text-brand-blue-light">Carné: 0903-23-463</p>
+                        <p class="text-[11px] text-slate-600 dark:text-zinc-400 mt-0.5">Frontend: arquitectura de interfaz, validaciones y generador dinámico de la matriz de transiciones.</p>
+                    </div>
+                    <span class="self-start sm:self-center shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue dark:text-brand-blue-light font-semibold">Frontend</span>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">Norberto Pedro Chún González</h4>
+                        <p class="text-[11px] font-mono text-brand-gold dark:text-brand-gold-light">Carné: 0903-24-5288</p>
+                        <p class="text-[11px] text-slate-600 dark:text-zinc-400 mt-0.5">Visualización: integración con Vis-Network, dibujo de los grafos y animación del recorrido de las cadenas.</p>
+                    </div>
+                    <span class="self-start sm:self-center shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold dark:text-brand-gold-light font-semibold">Visualización</span>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">Darwin Danilo Castro Garcia</h4>
+                        <p class="text-[11px] font-mono text-brand-red dark:text-red-400">Carné: 0903-20-6780</p>
+                        <p class="text-[11px] text-slate-600 dark:text-zinc-400 mt-0.5">Backend: servidor en FastAPI, modelo del autómata y motor de simulación de cadenas.</p>
+                    </div>
+                    <span class="self-start sm:self-center shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-brand-red/15 text-brand-red dark:text-red-400 font-semibold">Backend</span>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">Froilan Aldair Ardeano Miranda</h4>
+                        <p class="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">Carné: 0903-23-3982</p>
+                        <p class="text-[11px] text-slate-600 dark:text-zinc-400 mt-0.5">Algoritmos: conversión de AFN a AFD (construcción de subconjuntos) y minimización de AFD.</p>
+                    </div>
+                    <span class="self-start sm:self-center shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">Algoritmos</span>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 border-t border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900 flex justify-end">
+                <button id="boton_cerrar_modal_integrantes_pie" class="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:opacity-90 transition">Cerrar</button>
+            </div>
         </div>
     </div>
 
-    
-    <div id="modal_pasos" class="caja_modal_fondo ocultar">
-        <div class="caja_modal_dialogo caja_modal_ancho">
-            
-            <div class="cabecera_modal">
-                <h3 id="titulo_modal_pasos" class="titulo_modal">📋 Pasos del Algoritmo</h3>
-                <button id="boton_cerrar_modal_pasos" class="boton_cerrar">✕</button>
-            </div>
+    <!-- ===================================================================
+         MODAL DE PASOS DEL ALGORITMO  (app.js escribe el título y el contenido)
+         Siempre se ve oscuro porque app.js genera su contenido con colores oscuros fijos.
+         =================================================================== -->
+    <div id="modal_pasos" class="ocultar fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-slate-100 shadow-2xl [color-scheme:dark] animate-aparecer motion-reduce:animate-none">
 
-            <div id="contenedor_contenido_pasos" class="cuerpo_modal_scroll">
-               
-            </div>
-
-            <div class="pie_modal">
-                <button id="boton_cerrar_modal_pasos_pie" class="boton_secundario ancho_total">
-                    Entendido
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 shrink-0 rounded-lg bg-brand-gold/20 text-brand-gold-light flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    </div>
+                    <h3 id="titulo_modal_pasos" class="text-sm font-bold text-white leading-snug">Pasos del Algoritmo</h3>
+                </div>
+                <button id="boton_cerrar_modal_pasos" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" aria-label="Cerrar">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
+            <!-- app.js escribe aquí la tabla de subconjuntos o las particiones -->
+            <div id="contenedor_contenido_pasos" class="flex-1 min-h-0 overflow-y-auto p-6 text-xs text-slate-300 flex flex-col gap-3"></div>
+
+            <div class="px-6 py-3 border-t border-slate-800 bg-slate-900/60 flex justify-end">
+                <button id="boton_cerrar_modal_pasos_pie" class="px-4 py-2 rounded-xl bg-white text-slate-900 text-xs font-semibold hover:bg-slate-200 transition">Entendido</button>
+            </div>
         </div>
     </div>
-    </main>
-    
+
     <script src="js/app.js"></script>
     <script src="js/grafo.js"></script>
 </body>
