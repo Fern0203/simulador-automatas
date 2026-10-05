@@ -79,6 +79,55 @@ function limpiar_lista(texto) {
         .filter((item) => item.length > 0);
 }
 
+function validar_datos_formulario_automata(estados, alfabeto, estado_inicial, estados_finales, requiere_configuracion_completa = false) {
+    const campos_faltantes = [];
+    if (estados.length === 0) campos_faltantes.push("estados");
+    if (alfabeto.length === 0) campos_faltantes.push("alfabeto");
+    if (requiere_configuracion_completa && !estado_inicial) campos_faltantes.push("estado inicial");
+    if (requiere_configuracion_completa && estados_finales.length === 0) campos_faltantes.push("al menos un estado final");
+
+    if (campos_faltantes.length > 0) {
+        alert(`Completa los siguientes datos antes de continuar: ${campos_faltantes.join(", ")}.`);
+        return false;
+    }
+
+    if (new Set(estados).size !== estados.length) {
+        alert("Hay estados repetidos. Cada estado debe aparecer una sola vez.");
+        return false;
+    }
+
+    if (new Set(alfabeto).size !== alfabeto.length) {
+        alert("Hay símbolos repetidos en el alfabeto. Cada símbolo debe aparecer una sola vez.");
+        return false;
+    }
+
+    if (estado_inicial && !estados.includes(estado_inicial)) {
+        alert("El estado inicial debe pertenecer al conjunto de estados.");
+        return false;
+    }
+
+    if (estados_finales.some((estado) => !estados.includes(estado))) {
+        alert("Todos los estados finales deben pertenecer al conjunto de estados.");
+        return false;
+    }
+
+    return true;
+}
+
+function validar_resultado_automata(data, operacion) {
+    const automata = desempaquetar_objeto_automata(data);
+    const estados = automata?.estados ?? automata?.states ?? automata?.Q;
+    const tiene_estados = Array.isArray(estados)
+        ? estados.length > 0
+        : typeof estados === "object" && estados !== null && Object.keys(estados).length > 0;
+
+    if (!tiene_estados) {
+        throw new Error(`El servidor terminó la ${operacion}, pero no devolvió estados para dibujar.`);
+    }
+
+    return automata;
+}
+
 function sincronizar_selectores_estados(input_estados, select_inicial, caja_finales) {
     const estados = limpiar_lista(input_estados.value);
     const valor_anterior = select_inicial.value;
@@ -151,7 +200,7 @@ function renderizar_tabla_matriz(contenedor_tabla, estados, columnas, estado_ini
     contenedor_tabla.innerHTML = html;
 }
 
-function extraer_y_validar_transiciones(clase_inputs, estados_validos, es_afd) {
+function extraer_y_validar_transiciones(clase_inputs, estados_validos, alfabeto_valido, es_afd) {
     const inputs = document.querySelectorAll(`.${clase_inputs}`);
     const transiciones = [];
 
@@ -161,7 +210,28 @@ function extraer_y_validar_transiciones(clase_inputs, estados_validos, es_afd) {
         const valor = inp.value.trim();
 
         if (valor.length > 0) {
+            if (!estados_validos.includes(origen)) {
+                alert(`El estado de origen '${origen}' ya no existe en Q. Genera nuevamente la matriz.`);
+                inp.focus();
+                return null;
+            }
+            if (simbolo !== "ε" && !alfabeto_valido.includes(simbolo)) {
+                alert(`El símbolo '${simbolo}' ya no pertenece al alfabeto. Genera nuevamente la matriz.`);
+                inp.focus();
+                return null;
+            }
+            if (es_afd && ["ε", "epsilon", "e", "λ"].includes(simbolo.toLowerCase())) {
+                alert("Un AFD no admite transiciones vacías. Elimina epsilon del alfabeto y genera nuevamente la matriz.");
+                inp.focus();
+                return null;
+            }
+
             const destinos = limpiar_lista(valor);
+            if (destinos.length === 0) {
+                alert(`Ingresa al menos un destino para la transición (${origen}, ${simbolo}).`);
+                inp.focus();
+                return null;
+            }
             for (let d of destinos) {
                 if (!estados_validos.includes(d)) {
                     alert(`El estado destino '${d}' en la transición (${origen}, ${simbolo}) no existe en Q.`);
@@ -287,6 +357,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const todas_las_vistas = document.querySelectorAll(".seccion_vista");
 
     function mostrar_pantalla(nombre_vista) {
+        const vista_actual = document.querySelector(".seccion_vista:not(.ocultar)");
+        if (vista_actual && vista_actual.id !== nombre_vista) {
+            limpiarCampos(vista_actual);
+        }
+
         todas_las_vistas.forEach((vista) => {
             vista.classList.add("ocultar");
         });
@@ -310,13 +385,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* Limpiar campos */
-    function limpiarCampos() {
-        const inputsTexto = document.querySelectorAll('.caja_texto_input, .campo_texto');
+    function limpiarCampos(contenedor = document) {
+        const inputsTexto = contenedor.querySelectorAll('.caja_texto_input, .campo_texto');
         inputsTexto.forEach(input => {
             input.value = '';
         });
 
-        const selectores = document.querySelectorAll('select');
+        const selectores = contenedor.querySelectorAll('select');
         selectores.forEach(select => {
             select.selectedIndex = 0;
             if (select.id.includes('selector')) {
@@ -325,9 +400,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const contenedoresCheckboxes = [
-            document.getElementById('caja_estados_finales'),
-            document.getElementById('caja_finales_convertir'),
-            document.getElementById('caja_finales_minimizar')
+            contenedor.querySelector('#caja_estados_finales'),
+            contenedor.querySelector('#caja_finales_convertir'),
+            contenedor.querySelector('#caja_finales_minimizar')
         ];
         contenedoresCheckboxes.forEach(contenedor => {
             if (contenedor) {
@@ -337,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const tablas = ['tabla_matriz_transiciones', 'tabla_matriz_convertir', 'tabla_matriz_minimizar'];
         tablas.forEach(idTabla => {
-            const tabla = document.getElementById(idTabla);
+            const tabla = contenedor.querySelector(`#${idTabla}`);
             if (tabla) tabla.innerHTML = '';
         });
 
@@ -351,12 +426,24 @@ document.addEventListener("DOMContentLoaded", () => {
             'caja_resultado_minimizar'
         ];
         seccionesOcultar.forEach(idSeccion => {
-            const elem = document.getElementById(idSeccion);
+            const elem = contenedor.querySelector(`#${idSeccion}`);
             if (elem) elem.classList.add('ocultar');
         });
 
-        const cajaResultadoSim = document.getElementById('caja_resultado_simulacion');
+        const cajaResultadoSim = contenedor.querySelector('#caja_resultado_simulacion');
         if (cajaResultadoSim) cajaResultadoSim.innerHTML = '';
+
+        if (contenedor === document || contenedor.id === 'vista_crear') {
+            automata_guardado = null;
+        }
+        if (contenedor === document || contenedor.id === 'vista_convertir') {
+            afd_convertido_guardado = null;
+            pasos_conversion_guardados = [];
+        }
+        if (contenedor === document || contenedor.id === 'vista_minimizar') {
+            afd_minimizado_guardado = null;
+            pasos_minimizacion_guardados = [];
+        }
     }
 
     const botonesLimpiar = document.querySelectorAll('.limpiar-campos');
@@ -383,18 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const enlaceVolverInicio = document.querySelectorAll('.volver_inicio');
     enlaceVolverInicio.forEach((enlaceVolver) => {
         enlaceVolver.addEventListener("click", () => {
-            const secciones = document.querySelectorAll('.seccion_vista');
-
-            secciones.forEach(secciones => {
-                secciones.classList.add('ocultar');
-            });
-
-            const vistaIncio = document.getElementById('vista_inicio');
-            if(vistaIncio){
-                vistaIncio.classList.remove('ocultar');
-            }
-
-            limpiarCampos();
+            mostrar_pantalla('vista_inicio');
         });
     });
 
@@ -458,6 +534,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const estados = limpiar_lista(campo_estados.value);
             const alfabeto = limpiar_lista(campo_alfabeto.value);
 
+            if (tipo_automata_seleccionado === "AFD" && alfabeto.some((simbolo) => {
+                const simbolo_normalizado = simbolo.toLowerCase();
+                return ["ε", "epsilon", "e", "λ"].includes(simbolo_normalizado);
+            })) {
+                alert("Validación formal: un AFD no admite transiciones vacías. Elimina 'epsilon' o 'ε' del alfabeto.");
+                return;
+            }
+
             if (estados.length === 0 || alfabeto.length === 0) {
                 alert("Por favor ingresa al menos un estado y un símbolo para el alfabeto.");
                 return;
@@ -488,7 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const transiciones = extraer_y_validar_transiciones("celda_matriz_input", estados, tipo_automata_seleccionado === "AFD");
+            const transiciones = extraer_y_validar_transiciones("celda_matriz_input", estados, alfabeto, tipo_automata_seleccionado === "AFD");
             if (!transiciones) return;
 
             automata_guardado = {
@@ -624,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const transiciones = extraer_y_validar_transiciones("celda_matriz_conv", estados, false);
+            const transiciones = extraer_y_validar_transiciones("celda_matriz_conv", estados, alfabeto, false);
             if (!transiciones) return;
 
             const automata_afn = {
@@ -880,7 +964,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const transiciones = extraer_y_validar_transiciones("celda_matriz_min", estados, true);
+            const transiciones = extraer_y_validar_transiciones("celda_matriz_min", estados, alfabeto, true);
             if (!transiciones) return;
 
             const automata_afd = {
