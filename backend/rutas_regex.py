@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 import re
+from backend.regex_thompson import thompson_regex_a_afn
 
 # Creamos el enrutador con prefijo automático para todas sus rutas
 router = APIRouter(prefix="/api/regex", tags=["Expresiones Regulares"])
@@ -48,27 +49,11 @@ def endpoint_regex_a_afn(peticion: RegexRequest):
         raise HTTPException(status_code=400, detail="La expresión regular no puede estar vacía.")
     
     try:
-        # NOTA: Aquí conectaremos la función de Froilan cuando esté lista:
-        # from backend.regex_thompson import thompson_regex_a_afn
-        # return thompson_regex_a_afn(expresion)
-        
-        # MOCK TEMPORAL de desarrollo para habilitar el trabajo de frontend:
-        return {
-            "estados": ["q0", "q1", "q2", "q3"],
-            "alfabeto": ["a", "b"],
-            "estado_inicial": "q0",
-            "estados_aceptacion": ["q3"],
-            "transiciones": {
-                "q0": {"a": ["q1"], "ε": ["q2"]},
-                "q1": {"b": ["q3"]},
-                "q2": {"b": ["q3"]},
-                "q3": {}
-            },
-            "mensaje": f"AFN generado (Mock de prueba para regex: '{expresion}')"
-        }
+        resultado = thompson_regex_a_afn(expresion)
+        return resultado
 
     except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Error al procesar la expresión regular: {str(e)}")
+        raise HTTPException(status_code=422, detail=f"Error en la construcción de Thompson: {str(e)}")
 
 
 @router.post("/validar-cadena", response_model=ValidacionRegexResponse)
