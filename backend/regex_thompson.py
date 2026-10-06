@@ -10,7 +10,7 @@ class Estado:
             Estado._contador += 1
         else:
             self.nombre = nombre
-        # transiciones: {'simbolo': [Estado, Estado], 'ε': [Estado]}
+        # transiciones: {'simbolo': [Estado, Estado], 'ε' . : [Estado]}
         self.transiciones = {}
 
     def agregar_transicion(self, simbolo, destino):
