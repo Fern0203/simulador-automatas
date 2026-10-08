@@ -100,7 +100,7 @@ function dibujar_grafo_automata(id_contenedor, datos_recibidos) {
     let inicial_crudo = aut.estado_inicial ?? aut.inicial ?? aut.q0 ?? aut.initial_state ?? "";
     const estado_inicial = Array.isArray(inicial_crudo) ? inicial_crudo.join("") : String(inicial_crudo);
 
-    let finales_crudos = aut.estados_finales ?? aut.finales ?? aut.F ?? aut.accept_states ?? [];
+    let finales_crudos = aut.estados_finales ?? aut.estados_aceptacion ?? aut.finales ?? aut.F ?? aut.accept_states ?? [];
     if (!Array.isArray(finales_crudos)) {
         finales_crudos = (typeof finales_crudos === "object" && finales_crudos !== null)
             ? Object.keys(finales_crudos) 
@@ -197,6 +197,13 @@ function dibujar_grafo_automata(id_contenedor, datos_recibidos) {
 
     return new vis.Network(contenedor, { nodes: dataset_nodos, edges: dataset_aristas }, opciones_visuales_grafo);
 }
+
+// API reutilizable para dibujar automatas en cualquier lienzo por su ID.
+function dibujarGrafoEnContenedor(idContenedor, automata) {
+    return dibujar_grafo_automata(idContenedor, automata);
+}
+
+window.dibujarGrafoEnContenedor = dibujarGrafoEnContenedor;
 
 // Pausa en milisegundos para la animación
 function esperar_tiempo(ms) {

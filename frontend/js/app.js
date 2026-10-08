@@ -6,6 +6,8 @@ let pasos_conversion_guardados = [];
 let pasos_minimizacion_guardados = [];
 let afd_convertido_guardado = null;
 let afd_minimizado_guardado = null;
+let afnThompsonEnMemoria = null;
+let red_grafo_regex = null;
 
 // Localiza dinámicamente el autómata sin importar la clave devuelta por FastAPI
 function desempaquetar_objeto_automata(data) {
@@ -1084,6 +1086,161 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
             window.mostrar_pasos_en_modal("Pasos de Minimización (Partición de Equivalencia)", html);
+        });
+    }
+
+    // Módulo Regex: generación, validación y transferencia del AFN de Thompson.
+    const input_regex = document.getElementById("input-regex");
+    const input_cadena_regex = document.getElementById("input-cadena-regex");
+    const boton_generar_regex = document.getElementById("btn-generar-afn-regex");
+    const boton_validar_regex = document.getElementById("btn-validar-cadena-regex");
+    const boton_enviar_conversion = document.getElementById("btn-enviar-conversion");
+    const caja_resultado_regex = document.getElementById("resultado-validacion-regex");
+
+    if (boton_generar_regex && input_regex) {
+        boton_generar_regex.addEventListener("click", async () => {
+            const regex = input_regex.value.trim();
+            if (!regex) {
+                alert("Ingresa una expresión regular para continuar.");
+                input_regex.focus();
+                return;
+            }
+
+            afnThompsonEnMemoria = null;
+            if (boton_enviar_conversion) {
+                boton_enviar_conversion.style.display = "none";
+            }
+            boton_generar_regex.disabled = true;
+            const texto_original = boton_generar_regex.textContent;
+            boton_generar_regex.textContent = "⏳ Generando AFN...";
+
+            try {
+                const respuesta = await fetch("http://127.0.0.1:8000/api/regex/generar-afn", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ regex })
+                });
+                const data = await respuesta.json();
+                if (!respuesta.ok) {
+                    const detalle = typeof data.detail === "string" ? data.detail : null;
+                    throw new Error(detalle || "Error en el cálculo del autómata.");
+                }
+
+                const automata = desempaquetar_objeto_automata(data);
+                if (!Array.isArray(automata?.estados) || !Array.isArray(automata?.alfabeto)) {
+                    throw new Error("El servidor no devolvió un AFN válido.");
+                }
+                if (typeof window.dibujarGrafoEnContenedor !== "function") {
+                    throw new Error("No está disponible el renderizador del grafo.");
+                }
+
+                if (red_grafo_regex) red_grafo_regex.destroy();
+                red_grafo_regex = window.dibujarGrafoEnContenedor("grafo-regex", automata);
+                afnThompsonEnMemoria = automata;
+                if (boton_enviar_conversion) {
+                    boton_enviar_conversion.style.display = "inline-flex";
+                }
+            } catch (error) {
+                console.error("Error al generar el AFN desde Regex:", error);
+                alert(`Error al generar el AFN: ${error.message}`);
+            } finally {
+                boton_generar_regex.disabled = false;
+                boton_generar_regex.textContent = texto_original;
+            }
+        });
+    }
+
+    if (boton_validar_regex && input_regex && input_cadena_regex) {
+        boton_validar_regex.addEventListener("click", async () => {
+            const regex = input_regex.value.trim();
+            const cadena = input_cadena_regex.value.trim();
+            if (!regex) {
+                alert("Primero debes ingresar una expresión regular.");
+                input_regex.focus();
+                return;
+            }
+
+            boton_validar_regex.disabled = true;
+            try {
+                const respuesta = await fetch("http://127.0.0.1:8000/api/regex/validar-cadena", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ regex, cadena })
+                });
+                const data = await respuesta.json();
+                if (!respuesta.ok) {
+                    const detalle = typeof data.detail === "string" ? data.detail : null;
+                    throw new Error(detalle || "Error al validar la cadena.");
+                }
+                if (!caja_resultado_regex) return;
+
+                caja_resultado_regex.replaceChildren();
+                caja_resultado_regex.className = data.valida
+                    ? "caja_mensaje_resultado resultado_aceptado"
+                    : "caja_mensaje_resultado resultado_rechazado";
+                caja_resultado_regex.style.display = "block";
+
+                const etiqueta = document.createElement("strong");
+                etiqueta.textContent = data.valida ? "Aceptada: " : "Rechazada: ";
+                const cadena_resultado = document.createElement("code");
+                cadena_resultado.textContent = `"${data.cadena}"`;
+                caja_resultado_regex.append(etiqueta, document.createTextNode("La cadena "), cadena_resultado,
+                    document.createTextNode(data.valida
+                        ? " satisface la expresión regular."
+                        : " no coincide con el patrón."));
+            } catch (error) {
+                console.error("Error al validar la cadena con Regex:", error);
+                alert(`Error al validar la cadena: ${error.message}`);
+            } finally {
+                boton_validar_regex.disabled = false;
+            }
+        });
+    }
+
+    if (boton_enviar_conversion) {
+        boton_enviar_conversion.addEventListener("click", () => {
+            if (!afnThompsonEnMemoria) {
+                alert("No existe un AFN generado actualmente.");
+                return;
+            }
+
+            const boton_navegacion_conversion = document.querySelector('[data-vista="vista_convertir"]');
+            if (boton_navegacion_conversion) boton_navegacion_conversion.click();
+
+            const campo_estados_conv = document.getElementById("campo_estados_convertir");
+            const campo_alfabeto_conv = document.getElementById("campo_alfabeto_convertir");
+            const selector_inicial_conv = document.getElementById("selector_inicial_convertir");
+            const caja_finales_conv = document.getElementById("caja_finales_convertir");
+            const boton_gen_tabla_conv = document.getElementById("boton_generar_tabla_convertir");
+            const tabla_matriz_conv = document.getElementById("tabla_matriz_convertir");
+
+            if (!campo_estados_conv || !campo_alfabeto_conv || !selector_inicial_conv ||
+                !caja_finales_conv || !boton_gen_tabla_conv || !tabla_matriz_conv) {
+                alert("No se encontraron todos los controles del módulo de conversión.");
+                return;
+            }
+
+            const automata = afnThompsonEnMemoria;
+            campo_estados_conv.value = automata.estados.join(", ");
+            campo_alfabeto_conv.value = automata.alfabeto.join(", ");
+            sincronizar_selectores_estados(campo_estados_conv, selector_inicial_conv, caja_finales_conv);
+            selector_inicial_conv.value = automata.estado_inicial;
+
+            const finales = new Set(automata.estados_aceptacion || []);
+            caja_finales_conv.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+                checkbox.checked = finales.has(checkbox.value);
+            });
+
+            boton_gen_tabla_conv.click();
+
+            tabla_matriz_conv.querySelectorAll(".celda_matriz_conv").forEach((input) => {
+                const origen = input.dataset.origen;
+                const simbolo = input.dataset.simbolo;
+                const destinos = automata.transiciones?.[origen]?.[simbolo];
+                input.value = Array.isArray(destinos) ? destinos.join(", ") : (destinos ?? "");
+            });
+
+            tabla_matriz_conv.scrollIntoView({ behavior: "smooth", block: "center" });
         });
     }
 
