@@ -8,6 +8,7 @@ __pycache__/
 *$py.class
 
 .vscode/
+node_modules/
 
 .DS_Store
 Thumbs.db
