@@ -646,7 +646,7 @@
 
         <!-- Vista: Análisis y Auditoría de Logs (Fernando Batz) -->
         <section id="vista-logs" class="seccion_vista modulo-vista ocultar flex flex-col gap-6">
-            <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-5">
+            <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
                 <div>
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white">📋 Analizador y Auditor Léxico de Logs</h2>
                     <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
@@ -679,7 +679,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="lg:col-span-2 flex flex-col gap-1.5">
                         <label for="textarea-logs" class="text-xs font-semibold text-slate-700 dark:text-zinc-300">Pegar contenido de registros (multilínea):</label>
-                        <textarea id="textarea-logs" rows="6" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition resize-y" placeholder="Pega aquí los registros a auditar..."></textarea>
+                        <textarea id="textarea-logs" rows="6" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition" placeholder="Pega aquí los registros a auditar..."></textarea>
                     </div>
 
                     <div class="flex flex-col gap-1.5">
@@ -698,27 +698,27 @@
                 </div>
             </div>
 
-            <div id="panel-resumen-logs" class="ocultar grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm border-l-4 border-l-sky-400">
-                    <span class="block text-2xl font-bold font-mono text-sky-500" id="metrica-total">0</span>
+            <div id="panel-resumen-logs" class="ocultar grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-brand-blue" id="metrica-total">0</span>
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Total Líneas</span>
                 </div>
-                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm border-l-4 border-l-emerald-500">
-                    <span class="block text-2xl font-bold font-mono text-emerald-500" id="metrica-validas">0</span>
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-emerald-600" id="metrica-validas">0</span>
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Válidas (∈ L)</span>
                 </div>
-                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm border-l-4 border-l-amber-500">
-                    <span class="block text-2xl font-bold font-mono text-amber-500" id="metrica-diccionario">0</span>
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-brand-gold" id="metrica-diccionario">0</span>
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Fuera de Diccionario</span>
                 </div>
-                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm border-l-4 border-l-red-500">
-                    <span class="block text-2xl font-bold font-mono text-red-500" id="metrica-errores">0</span>
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-brand-red" id="metrica-errores">0</span>
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Error de Sintaxis (∉ L)</span>
                 </div>
             </div>
 
             <div id="contenedor-tabla-logs" class="ocultar rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Detalle de Líneas Analizadas</h3>
                     <div class="flex flex-wrap gap-2">
                         <button class="px-3 py-1.5 rounded-lg bg-brand-blue text-white text-xs font-medium transition" data-filtro="TODOS">Todos</button>
@@ -729,17 +729,17 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
-                    <table class="w-full text-left text-xs" id="tabla-resultados-logs">
+                    <table class="tabla_delta w-full text-left text-xs" id="tabla-resultados-logs">
                         <thead class="bg-slate-50 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400">
                             <tr>
-                                <th class="w-12 px-3 py-3 font-semibold">#</th>
-                                <th class="w-36 px-3 py-3 font-semibold">Estado</th>
+                                <th class="px-3 py-3 font-semibold">#</th>
+                                <th class="px-3 py-3 font-semibold">Estado</th>
                                 <th class="px-3 py-3 font-semibold">Texto Original</th>
                                 <th class="px-3 py-3 font-semibold">Diagnóstico Léxico / Sintáctico</th>
                                 <th class="px-3 py-3 font-semibold">Tokens Extraídos</th>
                             </tr>
                         </thead>
-                        <tbody id="tbody-resultados-logs" class="divide-y divide-slate-200 dark:divide-zinc-800">
+                        <tbody id="tbody-resultados-logs">
                             <!-- Generado dinámicamente -->
                         </tbody>
                     </table>
