@@ -68,6 +68,7 @@
                 <button data-vista="vista_convertir" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">AFN → AFD</button>
                 <button data-vista="vista_minimizar" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">Minimización</button>
                 <button data-vista="vista_regex" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">Regex</button>
+                <button data-vista="vista-logs" class="pestana whitespace-nowrap px-3 py-1.5 rounded-lg text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition">Logs</button>
             </nav>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -126,6 +127,10 @@
                 <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
                 Expresiones Regulares
                 <span class="ml-auto text-[9px] px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded">Próx.</span>
+            </button>
+            <button data-vista="vista-logs" class="item_menu flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition">
+                <span class="w-4 shrink-0 text-center">📋</span>
+                Analizador de Logs
             </button>
         </nav>
 
@@ -636,6 +641,109 @@
             <div class="card contenedor-grafo-card">
                 <h3>Visualización del AFN Resultante</h3>
                 <div id="grafo-regex" class="canvas-grafo canvas-grid"></div>
+            </div>
+        </section>
+
+        <!-- Vista: Análisis y Auditoría de Logs (Fernando Batz) -->
+        <section id="vista-logs" class="seccion_vista modulo-vista ocultar flex flex-col gap-6">
+            <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">📋 Analizador y Auditor Léxico de Logs</h2>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
+                    Audita archivos de registro contrastando su sintaxis contra una <strong>Expresión Regular</strong> y validando tokens clave frente a un <strong>Diccionario de Símbolos</strong> autorizados.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="select-patron-logs" class="text-xs font-semibold text-slate-700 dark:text-zinc-300">Plantilla de Log:</label>
+                        <select id="select-patron-logs" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition cursor-pointer">
+                            <option value="servidor">Log de Servidor ([NIVEL] FECHA IP - MENSAJE)</option>
+                            <option value="apache">Servidor Web Apache (IP - [FECHA] "METODO RUTA" STATUS)</option>
+                            <option value="iso">Eventos ISO (FECHA [NIVEL] MENSAJE)</option>
+                            <option value="custom">-- Expresión Regular Personalizada --</option>
+                        </select>
+                    </div>
+
+                    <div class="ocultar flex flex-col gap-1.5" id="grupo-regex-custom">
+                        <label for="input-regex-logs" class="text-xs font-semibold text-slate-700 dark:text-zinc-300">Expresión Regular Personalizada:</label>
+                        <input type="text" id="input-regex-logs" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition" placeholder="Ej: ^\[(?P&lt;nivel&gt;[A-Z]+)\] (?P&lt;mensaje&gt;.+)$" />
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label for="input-diccionario-logs" class="text-xs font-semibold text-slate-700 dark:text-zinc-300">Diccionario de Tokens Permitidos (separados por coma):</label>
+                        <input type="text" id="input-diccionario-logs" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition" value="INFO, WARN, WARNING, ERROR" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="lg:col-span-2 flex flex-col gap-1.5">
+                        <label for="textarea-logs" class="text-xs font-semibold text-slate-700 dark:text-zinc-300">Pegar contenido de registros (multilínea):</label>
+                        <textarea id="textarea-logs" rows="6" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition" placeholder="Pega aquí los registros a auditar..."></textarea>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label for="input-archivo-logs" class="text-xs font-semibold text-slate-700 dark:text-zinc-300">O cargar archivo físico (.log / .txt):</label>
+                        <input type="file" id="input-archivo-logs" accept=".log,.txt" class="campo_texto w-full px-3.5 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-900 text-xs text-slate-600 dark:text-zinc-400" />
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="button" id="btn-analizar-logs" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-hover text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
+                        ⚡ Auditar Registros
+                    </button>
+                    <button type="button" id="btn-limpiar-logs" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 text-xs font-medium transition">
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <div id="panel-resumen-logs" class="ocultar grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-brand-blue" id="metrica-total">0</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Total Líneas</span>
+                </div>
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-emerald-600" id="metrica-validas">0</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Válidas (∈ L)</span>
+                </div>
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-brand-gold" id="metrica-diccionario">0</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Fuera de Diccionario</span>
+                </div>
+                <div class="rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-5 shadow-sm">
+                    <span class="block text-xl font-bold font-mono text-brand-red" id="metrica-errores">0</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Error de Sintaxis (∉ L)</span>
+                </div>
+            </div>
+
+            <div id="contenedor-tabla-logs" class="ocultar rounded-2xl bg-white dark:bg-oscuro-tarjeta border border-slate-200 dark:border-zinc-800/80 p-6 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Detalle de Líneas Analizadas</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="px-3 py-1.5 rounded-lg bg-brand-blue text-white text-xs font-medium transition" data-filtro="TODOS">Todos</button>
+                        <button class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-zinc-800 transition" data-filtro="VALIDA">Válidas</button>
+                        <button class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-zinc-800 transition" data-filtro="FUERA_DICCIONARIO">Fuera Diccionario</button>
+                        <button class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-zinc-800 transition" data-filtro="ERROR_FORMATO">Errores Sintácticos</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <table class="tabla_delta w-full text-left text-xs" id="tabla-resultados-logs">
+                        <thead class="bg-slate-50 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400">
+                            <tr>
+                                <th class="px-3 py-3 font-semibold">#</th>
+                                <th class="px-3 py-3 font-semibold">Estado</th>
+                                <th class="px-3 py-3 font-semibold">Texto Original</th>
+                                <th class="px-3 py-3 font-semibold">Diagnóstico Léxico / Sintáctico</th>
+                                <th class="px-3 py-3 font-semibold">Tokens Extraídos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-resultados-logs">
+                            <!-- Generado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
