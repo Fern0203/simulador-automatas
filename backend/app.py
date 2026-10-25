@@ -16,12 +16,14 @@ from simulador import simular_afd, simular_afn
 from conversion import convertir_afn_a_afd
 from minimizacion import minimizar_afd
 from backend.rutas_regex import router as regex_router
+from backend.rutas_logs import router as logs_router
 
 # Creamos la app de FastAPI
 app = FastAPI(title="Simulador de Autómatas UMG")
 
 # Configuracion de CORS para que el frontend pueda conectarse sin problemas
 app.include_router(regex_router)
+app.include_router(logs_router)
 
 app.add_middleware(
     CORSMiddleware,
