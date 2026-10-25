@@ -1245,3 +1245,256 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 });
+
+// ==========================================
+// MÓDULO 5: AUDITORÍA DE LOGS (NORBERTO CHÚN)
+// ==========================================
+
+let logsAnalizadosEnMemoria = [];
+
+function inicializarSelectorPlantillasLogs() {
+    const selectPatron = document.getElementById("select-patron-logs");
+    const grupoRegexCustom = document.getElementById("grupo-regex-custom");
+    const inputDiccionario = document.getElementById("input-diccionario-logs");
+
+    if (!selectPatron || !grupoRegexCustom || !inputDiccionario) return;
+
+    const diccionariosPorDefecto = {
+        servidor: "INFO, WARN, WARNING, ERROR",
+        apache: "GET, POST, PUT, DELETE, PATCH",
+        iso: "DEBUG, INFO, WARN, ERROR",
+        custom: ""
+    };
+
+    selectPatron.addEventListener("change", () => {
+        const esPersonalizado = selectPatron.value === "custom";
+        grupoRegexCustom.classList.toggle("ocultar", !esPersonalizado);
+
+        if (esPersonalizado) {
+            if (!inputDiccionario.value.trim()) {
+                inputDiccionario.placeholder = "Ingresa tokens separados por coma...";
+            }
+            return;
+        }
+
+        inputDiccionario.value = diccionariosPorDefecto[selectPatron.value] || "";
+        inputDiccionario.placeholder = "";
+    });
+}
+
+async function auditarLogs() {
+    const selectPatron = document.getElementById("select-patron-logs");
+    const regexCustom = document.getElementById("input-regex-logs");
+    const diccionarioCustom = document.getElementById("input-diccionario-logs");
+    const textareaLogs = document.getElementById("textarea-logs");
+    const inputArchivo = document.getElementById("input-archivo-logs");
+    const btnAuditar = document.getElementById("btn-analizar-logs");
+
+    if (!selectPatron || !regexCustom || !diccionarioCustom || !textareaLogs || !inputArchivo || !btnAuditar) {
+        alert("No se encontraron todos los controles del módulo de auditoría de logs.");
+        return;
+    }
+
+    const archivo = inputArchivo.files?.[0] || null;
+    const textoLogs = textareaLogs.value;
+
+    if (!archivo && !textoLogs.trim()) {
+        alert("Pega contenido de logs en el área de texto o selecciona un archivo .log/.txt.");
+        return;
+    }
+
+    if (selectPatron.value === "custom" && !regexCustom.value.trim()) {
+        alert("Debes especificar una expresión regular para el modo personalizado.");
+        regexCustom.focus();
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("patron_tipo", selectPatron.value);
+    if (regexCustom.value.trim()) formData.append("regex_custom", regexCustom.value.trim());
+    if (diccionarioCustom.value.trim()) formData.append("diccionario_custom", diccionarioCustom.value.trim());
+
+    if (archivo) {
+        formData.append("archivo", archivo);
+    } else {
+        formData.append("texto_logs", textoLogs);
+    }
+
+    btnAuditar.disabled = true;
+    const textoOriginal = btnAuditar.textContent;
+    btnAuditar.textContent = "⏳ Auditando...";
+
+    try {
+        const respuesta = await fetch("http://127.0.0.1:8000/api/logs/analizar", {
+            method: "POST",
+            body: formData
+        });
+
+        let data;
+        try {
+            data = await respuesta.json();
+        } catch {
+            throw new Error(`El servidor devolvió una respuesta inválida (HTTP ${respuesta.status}).`);
+        }
+
+        if (!respuesta.ok) {
+            const detalle = typeof data.detail === "string"
+                ? data.detail
+                : data.detail?.mensaje;
+            throw new Error(detalle || "Error al procesar los registros.");
+        }
+
+        if (!Array.isArray(data.detalles)) {
+            throw new Error("El servidor no devolvió el detalle de los registros analizados.");
+        }
+
+        logsAnalizadosEnMemoria = data.detalles;
+        actualizarMetricasLogs(data);
+        renderizarTablaLogs(logsAnalizadosEnMemoria);
+        document.getElementById("panel-resumen-logs")?.classList.remove("ocultar");
+        document.getElementById("contenedor-tabla-logs")?.classList.remove("ocultar");
+    } catch (error) {
+        console.error("Error al auditar los registros:", error);
+        alert(`❌ ${error instanceof Error ? error.message : "No se pudieron auditar los registros."}`);
+    } finally {
+        btnAuditar.disabled = false;
+        btnAuditar.textContent = textoOriginal;
+    }
+}
+
+function actualizarMetricasLogs(data) {
+    const metricas = {
+        "metrica-total": data.total_lineas,
+        "metrica-validas": data.lineas_validas,
+        "metrica-diccionario": data.lineas_fuera_diccionario,
+        "metrica-errores": data.lineas_error_formato
+    };
+
+    Object.entries(metricas).forEach(([id, valor]) => {
+        const elemento = document.getElementById(id);
+        if (elemento) elemento.textContent = String(valor ?? 0);
+    });
+}
+
+function renderizarTablaLogs(filas) {
+    const tbody = document.getElementById("tbody-resultados-logs");
+    if (!tbody) return;
+
+    tbody.replaceChildren();
+
+    if (filas.length === 0) {
+        const fila = document.createElement("tr");
+        const celda = document.createElement("td");
+        celda.colSpan = 5;
+        celda.className = "px-3 py-6 text-center text-slate-500 dark:text-zinc-400";
+        celda.textContent = "No hay registros para mostrar con el filtro seleccionado.";
+        fila.appendChild(celda);
+        tbody.appendChild(fila);
+        return;
+    }
+
+    const estados = {
+        VALIDA: { etiqueta: "Válida (∈ L)", clases: "bg-emerald-500/10 text-emerald-600" },
+        FUERA_DICCIONARIO: { etiqueta: "Fuera Diccionario", clases: "bg-brand-gold/10 text-brand-gold" },
+        ERROR_FORMATO: { etiqueta: "Error Formato (∉ L)", clases: "bg-brand-red/10 text-brand-red" }
+    };
+
+    filas.forEach((item) => {
+        const fila = document.createElement("tr");
+        const celdaNumero = document.createElement("td");
+        celdaNumero.className = "px-3 py-3 font-mono text-slate-500 dark:text-zinc-400";
+        celdaNumero.textContent = String(item.numero_linea ?? "");
+
+        const celdaEstado = document.createElement("td");
+        celdaEstado.className = "px-3 py-3";
+        const badge = document.createElement("span");
+        const estado = estados[item.estado];
+        badge.className = `inline-flex rounded-lg border border-slate-200 dark:border-zinc-700 px-2 py-1 text-[10px] font-semibold ${estado?.clases || ""}`;
+        badge.textContent = estado?.etiqueta || String(item.estado ?? "Desconocido");
+        celdaEstado.appendChild(badge);
+
+        const celdaOriginal = document.createElement("td");
+        celdaOriginal.className = "px-3 py-3";
+        const codigo = document.createElement("code");
+        codigo.className = "font-mono text-slate-700 dark:text-zinc-300";
+        codigo.style.wordBreak = "break-word";
+        codigo.textContent = String(item.linea_original ?? "");
+        celdaOriginal.appendChild(codigo);
+
+        const celdaDiagnostico = document.createElement("td");
+        celdaDiagnostico.className = "px-3 py-3 text-slate-600 dark:text-zinc-400";
+        celdaDiagnostico.textContent = String(item.diagnostico ?? "");
+
+        const celdaComponentes = document.createElement("td");
+        celdaComponentes.className = "px-3 py-3";
+        const componentes = item.componentes && typeof item.componentes === "object"
+            ? Object.entries(item.componentes)
+            : [];
+
+        if (componentes.length === 0) {
+            celdaComponentes.textContent = "-";
+        } else {
+            const chips = document.createElement("div");
+            chips.className = "flex flex-wrap gap-1";
+            componentes.forEach(([clave, valor]) => {
+                const chip = document.createElement("span");
+                chip.className = "rounded-lg bg-slate-100 dark:bg-zinc-800 px-2 py-1 font-mono text-[10px] text-slate-700 dark:text-zinc-300";
+                chip.textContent = `${clave}: ${typeof valor === "string" ? valor : JSON.stringify(valor)}`;
+                chips.appendChild(chip);
+            });
+            celdaComponentes.appendChild(chips);
+        }
+
+        fila.append(celdaNumero, celdaEstado, celdaOriginal, celdaDiagnostico, celdaComponentes);
+        tbody.appendChild(fila);
+    });
+}
+
+function inicializarFiltrosTablaLogs() {
+    const botonesFiltro = document.querySelectorAll("#contenedor-tabla-logs [data-filtro]");
+
+    botonesFiltro.forEach((boton) => {
+        boton.addEventListener("click", () => {
+            botonesFiltro.forEach((elemento) => {
+                elemento.classList.remove("bg-brand-blue", "text-white");
+                elemento.classList.add("border", "border-slate-200", "dark:border-zinc-700", "text-slate-600", "dark:text-zinc-300");
+            });
+            boton.classList.add("bg-brand-blue", "text-white");
+            boton.classList.remove("border", "border-slate-200", "dark:border-zinc-700", "text-slate-600", "dark:text-zinc-300");
+
+            const criterio = boton.getAttribute("data-filtro");
+            const filas = criterio === "TODOS"
+                ? logsAnalizadosEnMemoria
+                : logsAnalizadosEnMemoria.filter((item) => item.estado === criterio);
+            renderizarTablaLogs(filas);
+        });
+    });
+}
+
+function inicializarBotonLimpiarLogs() {
+    const btnLimpiar = document.getElementById("btn-limpiar-logs");
+    if (!btnLimpiar) return;
+
+    btnLimpiar.addEventListener("click", () => {
+        const textareaLogs = document.getElementById("textarea-logs");
+        const inputArchivo = document.getElementById("input-archivo-logs");
+        if (textareaLogs) textareaLogs.value = "";
+        if (inputArchivo) inputArchivo.value = "";
+        logsAnalizadosEnMemoria = [];
+
+        document.getElementById("panel-resumen-logs")?.classList.add("ocultar");
+        document.getElementById("contenedor-tabla-logs")?.classList.add("ocultar");
+
+        const filtroTodos = document.querySelector('#contenedor-tabla-logs [data-filtro="TODOS"]');
+        filtroTodos?.click();
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarSelectorPlantillasLogs();
+    inicializarFiltrosTablaLogs();
+    inicializarBotonLimpiarLogs();
+
+    const btnAuditar = document.getElementById("btn-analizar-logs");
+    btnAuditar?.addEventListener("click", auditarLogs);
+});
