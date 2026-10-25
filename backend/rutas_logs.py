@@ -81,7 +81,7 @@ async def endpoint_analizar_logs(
     regex_custom: Optional[str] = Form(None, description="Regex si patron_tipo es 'custom'"),
     diccionario_custom: Optional[str] = Form(None, description="Tokens válidos separados por coma"),
     texto_logs: Optional[str] = Form(None, description="Contenido de logs pegado en el textarea"),
-    archivo: Optional[UploadFile] = File(None, description="Archivo .log o .txt subido")
+    archivo: UploadFile = File(None, description="Archivo .log o .txt subido")
 ):
     """
     Analiza logs validando estructura por Regex y tokens por diccionario.
